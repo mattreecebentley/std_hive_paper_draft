@@ -1581,14 +1581,25 @@ template&lt;<i>container-compatible-range</i>&lt;T&gt; R&gt;
 
 
 <code style="font-weight:bold">
-	hive&amp; operator=(hive&amp;&amp; x) noexcept(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || allocator_traits&lt;Allocator&gt;::is_always_equal::value);</code>
+  hive&amp; operator=(const hive&amp; x);</code>
 <ol start="19">
+  <li>Preconditions: <code>T</code> is <i>Cpp17CopyInsertable</i> into <code>*this</code>.</li>
+  <li>Effects: All elements in <code>*this</code> are destroyed. Subsequently, all elements in <code>x</code> are copied into <code>*this</code>.<br>
+  [Note: <code>current-limits</code> is unchanged. - end note]</li>
+  <li>Complexity: Linear in <code>size() + x.size()</code>.</li>
+</ol>
+
+
+
+<code style="font-weight:bold">
+	hive&amp; operator=(hive&amp;&amp; x) noexcept(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || allocator_traits&lt;Allocator&gt;::is_always_equal::value);</code>
+<ol start="22">
 	<li>Effects: All elements in <code>*this</code> are destroyed.<br>
 	When <code>(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || allocator_traits&lt;Allocator&gt;::is_always_equal::value) == true</code>, <code>current-limits</code> is set to <code>x.current-limits</code> and all element blocks are moved from <code>x</code> into <code>*this</code>. All iterators into <code>x</code> now refer to the same elements but within <code>*this</code>.<br>
-	When <code>(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || allocator_traits&lt;Allocator&gt;::is_always_equal::value) == false</code>, if <code>x.current-limits</code> is within the bounds of <code>block_capacity_hard_limits()</code>, <code>current-limits</code> is set to <code>x.current-limits</code>. Subsequently all elements in <code>x</code> are moved into <code>*this</code> and all element blocks in <code>x</code> destroyed. All iterators into <code>x</code> are invalidated. If an exception is thrown other than by the move constructor of
+	When <code>(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || allocator_traits&lt;Allocator&gt;::is_always_equal::value) == false</code>, all elements in <code>x</code> are moved into <code>*this</code> and all element blocks in <code>x</code> destroyed. All iterators into <code>x</code> are invalidated. If an exception is thrown other than by the move constructor of
 		a non-<i>Cpp17CopyInsertable</i> <code>T</code>, both <code>x</code> and <code>*this</code> are left in a usable state.</li>
 	<li>Complexity: Linear in <code>size()</code>. If allocators are not equal or propogated from <code>x</code> into <code>*this</code>, also linear in <code>x.size()</code>.</li>
-	<li>Throws: If reallocation to new element blocks occurs, uses Allocator::allocate() which can throw an appropriate exception.</li>
+	<li>Throws: If reallocation to new element blocks occurs, uses <code>Allocator::allocate()</code> which can throw an appropriate exception.</li>
 </ol>
 
 
@@ -3826,7 +3837,7 @@ struct) and one index (into the element and skipfield blocks respectively). We
 add a "reverse-lookup" pointer into the element block's metadata which points back at
 the pointer pointing to it in the vector (we could have a pointer to the vector block + an index, but this consumes more memory so we'll just say a pointer to the vector position for the remainder of this text). When the iterator needs to transition
 blocks it follows the pointer out to the vector and increments or decrements as
-necessary. When splice() is run  it alters the reverse-lookup pointers in each
+necessary. When splice() is run	it alters the reverse-lookup pointers in each
 of the source's blocks such that they point to the correct pointers in the
 destination's vector. If the vector has to expand either during splice to accomodate the source blocks, the reverse-lookup pointers will need to be updated for all blocks.</p>
 
