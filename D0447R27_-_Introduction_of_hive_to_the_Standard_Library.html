@@ -229,7 +229,7 @@ Reply-to: Matthew Bentley &lt;mattreecebentley@gmail.com&gt;<br>
 
 <h2><a id="revisions"></a>Revision history</h2>
 <ul>
-<li>R27: Correction/optimisation to bitfield+skipfield approach to element skipping. Updated Tech spec numbering and tab:containers.summary to match current draft C++ standard. Added [diff] and [library] sections to tech spec.</li>
+<li>R27: Correction/optimisation to bitfield+skipfield approach to element skipping. Updated tab:containers.summary and sequence.reqmts to match current draft C++ standard. Added [diff] and [library] sections to tech spec. Other nitpicks from first LWG meeting processed. Correction to possessive usage of 'its'. Placeholder numbers in tech spec removed. "may be the back of the container when no erasures have occurred, or " removed in synopsis. Added move assignment definition as it transfers current-limits from source to destination so is not covered by blanket wording.</li>
 	<li>R26: Tech spec changes: kona final meeting changes applied: is_active()
 		removed. Precondition added to get_iterator, Effects 'return value of end()
 		when pointer is not in <code>*this</code>' clause is removed. Heading corrections. Formatting corrections.<br>
@@ -450,7 +450,7 @@ to reference each other during gameplay, and elements are being inserted or
 erased in real time. The only non-associative standard library container which
 also has this feature is std::list, but it is undesirable for performance and
 memory-usage reasons. This does not stop it being used in <a href="https://isocpp.org/files/papers/P3012R0.pdf">many open-source
-projects</a> due to this feature and it's splice operations.</p>
+projects</a> due to this feature and its splice operations.</p>
 
 <p>Problematic aspects of a typical bucket array are that they tend to have a
 fixed memory block size, tend to not re-use memory locations from erased
@@ -512,7 +512,7 @@ style="max-width: 21cm; height: auto;">
 
 <p>There is additional introductory information about the container's structure
 in <a href="https://www.youtube.com/watch?v=wBER1R8YyGY">this CPPcon talk</a>,
-though much of it's information is out of date (hive no longer uses a stack but
+though much of its information is out of date (hive no longer uses a stack but
 a <a href="https://en.wikipedia.org/wiki/Free_list">free list</a> instead,
 benchmark data is out of date, etcetera), and more detailed implementation
 information is available in <a href="https://www.youtube.com/watch?v=V6ZVUBhls38">this CPPnow talk</a>. Both
@@ -776,7 +776,7 @@ every element block transition, 2 reads of the skipfield are necessary instead o
 		becomes pointer/index math and is reduced to constant time for that block.
 		If first and last are in the same block but are in the first and last
 		element slots in the block, distance can again be calculated from the
-		block's <i>size</i> metadata in constant time. If they are not in the same block but first points to the first element in it's block, the first block can be skipped and it's <i>size</i> added to the distance travelled. Likewise if last points to the last element in it's block, the last block can also be skipped and it's <i>size</i> added.</p>
+		block's <i>size</i> metadata in constant time. If they are not in the same block but first points to the first element in its block, the first block can be skipped and its <i>size</i> added to the distance travelled. Likewise if last points to the last element in its block, the last block can also be skipped and its <i>size</i> added.</p>
  </li>
 	<li><code style="font-weight: bold;">iterator insert/emplace</code><br>
 		<i>(O(1) amortized)</i>
@@ -875,7 +875,7 @@ every element block transition, 2 reads of the skipfield are necessary instead o
 		<p>For intermediary blocks between the first and last blocks, for
 		trivially-destructible types we can simply deallocate or reserve these
 		without calling the destructors of elements or dealing with the
-		erased-element skipping/recording mechanisms for those blocks. As with distance, if the first iterator points to the first element in it's element block, the first block can be treated like an intermediary block - likewise for the last block, if the last iterator points to the last element in it's element block. Hence for trivially-destructible types, the entire operation can be linear in the
+		erased-element skipping/recording mechanisms for those blocks. As with distance, if the first iterator points to the first element in its element block, the first block can be treated like an intermediary block - likewise for the last block, if the last iterator points to the last element in its element block. Hence for trivially-destructible types, the entire operation can be linear in the
 		number of blocks contained within the range or linear in the number of elements
 		contained within the range, or somewhere in between.</p>
 		<p>As with singular erasure, in a vector-of-pointers-to-blocks style of
@@ -919,8 +919,7 @@ every element block transition, 2 reads of the skipfield are necessary instead o
 		the supplied limits reallocation will occur and the operation is at worst O(n) in
 		<code>capacity()</code>.</p>
  </li>
-	<li><code style="font-weight: bold;">static constexpr std::hive_limits
-		block_capacity_hard_limits() noexcept</code><br>
+	<li><code style="font-weight: bold;">static constexpr std::hive_limits block_capacity_hard_limits() noexcept</code><br>
 		<i>(O(1))</i>
 		<p>As opposed to block_capacity_limits() which returns the current min/max
 		element block capacities for a given instance of hive, this allows the user
@@ -1129,6 +1128,7 @@ The latter approach is why the order of elements post-reshape is not guaranteed 
 &lt;hazard_pointer&gt;
 <ins>&lt;hive&gt;</ins>
 &lt;initializer_list&gt;
+&lt;inplace_vector&gt;
 &lt;iomanip&gt;
 &lt;ios&gt;
 &lt;iosfwd&gt;
@@ -1204,8 +1204,8 @@ The latter approach is why the order of elements post-reshape is not guaranteed 
 
 <h3>Header &lt;version&gt; synopsis [version.syn]</h3>
 
-<p><code>#define __cpp_lib_hive &lt;editor supplied value&gt; // also in
-&lt;hive&gt;</code></p>
+<p><code><ins>#define __cpp_lib_hive ?????? // also in
+&lt;hive&gt;</ins></code></p>
 
 
 <h3>General [containers.general]</h3>
@@ -1249,31 +1249,32 @@ The latter approach is why the order of elements post-reshape is not guaranteed 
 
 <h3>Sequence containers [sequence.reqmts]</h3>
 <ol>
-	<li>A sequence container organizes a finite set of objects, all of the same
-		type, into a strictly linear arrangement. The library provides four basic
-		kinds of sequence containers: vector, forward_list, list, and deque. In
-		addition, array <del>is provided as a sequence container which provides
-		limited sequence operations because it has a fixed number of elements</del>
-		<ins>and hive are provided as sequence containers which provide limited
-		sequence operations, in array's case because it has a fixed number of
-		elements, and in hive's case because insertion order is unspecified.
-		</ins>The library also provides container adaptors that make it easy to
-		construct abstract data types, such as stacks or queues, out of the basic
-		sequence container kinds (or out of other kinds of sequence containers that
-		the user defines).</li>
+	 <li>A sequence container organizes a finite set of objects, all of the same type, into a strictly linear arrangement.
+The library provides the following basic kinds of sequence containers: vector, inplace_vector, forward_list, list, and deque.
+In addition, array <del>is provided as a sequence container which provides limited sequence operations because it has a fixed number of elements</del> <ins>and hive are provided as sequence containers which provide limited sequence operations, in array's case because it has a fixed number of elements, and in hive's case because insertion order is unspecified</ins>.
+The library also provides container adaptors that make it easy to construct abstract data types, such as stacks, queues, flat_maps, flat_multimaps, flat_sets, or flat_multisets, out of the basic sequence container kinds (or out of other program-defined sequence containers).</li>
 </ol>
 
-<h3>24.3.8 Header <code>&lt;hive&gt;</code> synopsis [hive.syn]</h3>
+<h3>Header <code>&lt;hive&gt;</code> synopsis [hive.syn]</h3>
 
  <div style="background: #ffffff; overflow:auto; width:auto; border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;">
 	<pre style="margin: 0; line-height: 125%">
+// [hive] class template hive
+
 #include &lt;initializer_list&gt; // see [initializer.list.syn]
 #include &lt;compare&gt; // see [compare.syn]
 
 namespace std {
-	// class template hive
 
-	struct hive_limits;
+	 struct hive_limits
+	 {
+		 size_t min;
+		 size_t max;
+		 constexpr hive_limits(size_t minimum, size_t maximum) noexcept : min(minimum), max(maximum) {}
+	 };
+
+
+	// class template hive
 
 	template &lt;class T, class Allocator = allocator&lt;T&gt;&gt; class hive;
 
@@ -1281,11 +1282,11 @@ namespace std {
 		void swap(hive&lt;T, Allocator&gt;&amp; x, hive&lt;T, Allocator&gt;&amp; y)
 			noexcept(noexcept(x.swap(y)));
 
-	template&lt;class T, class Allocator, class U&gt;
+	template&lt;class T, class Allocator, class U = T&gt;
 		typename hive&lt;T, Allocator&gt;::size_type
 			erase(hive&lt;T, Allocator&gt;&amp; c, const U&amp; value);
 
-	template&lt;class T, class Allocator, class Predicate&gt;
+			template&lt;class T, class Allocator, class Predicate&gt;
 		typename hive&lt;T, Allocator&gt;::size_type
 			erase_if(hive&lt;T, Allocator&gt;&amp; c, Predicate pred);
 
@@ -1296,18 +1297,13 @@ namespace std {
 }</pre>
 </div>
 
-<h3>24.3.16 Class template <code>hive</code> [hive]</h3>
+<h3>Class template <code>hive</code> [hive]</h3>
 
-<h4>24.3.16.1 &nbsp;&nbsp;Overview [hive.overview]</h4>
+<h4>Overview [hive.overview]</h4>
 <ol>
-	<li>A hive is a sequence container that allows constant-time insert and erase
-		operations. Insertion position is not specified, but will in most
-		implementations typically be the back of the container when no erasures
-		have occurred, or when erasures have occurred it can re-use existing erased
-		element memory locations. Storage management is handled automatically and
-		is specifically organized in multiple blocks of elements, referred to
-		hereon as <i>element blocks</i>.</li>
-	<li>Element blocks which are interacted with when iterating over the sequence
+	 <li>A hive is a type of sequence container that supports constant-time insertion and erasure operations. Storage management is automatically handled, with elements organized into multiple blocks, referred to as <i>element blocks</i>. Insertion position is determined by the container.<br>
+[Note: When erasures have occurred the container may re-use existing erased element memory locations during insertion. -end note]
+	<li>Element blocks which are traversed when iterating over the sequence
 		are referred to as <i>active blocks</i>, those which are not are referred
 		to as <i>reserved blocks</i>. Active blocks which become empty of sequence
 		elements [Example: via use of <code>erase</code> or <code>clear</code> -
@@ -1316,8 +1312,7 @@ namespace std {
 		example] for future use during insertions, at which point they become
 		active blocks.</li>
 	<li>Erasures use unspecified techniques to mark erased elements as being
-		erased, as opposed to relocating subsequent elements during erasure as is
-		expected in a vector or deque. These elements are subsequently skipped
+		erased, as opposed to relocating subsequent elements during erasure. These elements are subsequently skipped
 		during iteration. The same, or different unspecified techniques may be used
 		to record the locations of erased elements, such that those locations may
 		be reused later during insertions. All of these techniques have constant
@@ -1344,11 +1339,10 @@ namespace std {
 		<p style="text-indent: -25pt;">(5.5) &mdash; After construction a hive's
 		limits can be changed by the user via <code>reshape</code>.</p>
 		<p style="text-indent: -25pt;">(5.6) &mdash; Limits are copied between
-		hives during copy construction, move construction, <code>operator = (hive
-		&amp;&amp;)</code> and <code>swap</code>.</p>
+		hives during copy construction, move construction, move assignment and <code>swap</code>. [ Note: Not copied during copy assignment. - end note ]</p>
 		<p style="text-indent: -25pt;">(5.7) &mdash; An element block is said to be
-		<i>within the bounds of</i> a pair of minimum/maximum limits when it's
-		capacity is &gt;= the minimum limit and &lt;= the maximum limit.</p>
+		<i>within the bounds of</i> a pair of minimum/maximum limits when its
+		capacity is greater-or-equal-to the minimum limit and less-than-or-equal-to the maximum limit.</p>
  </li>
 	<li>A hive conforms to the requirements for Containers ([container.reqmts]),
 		with the exception of operators <code>== and !=</code>. A hive also meets
@@ -1358,28 +1352,15 @@ namespace std {
 		sequence container requirements ([sequence.reqmts]). Descriptions are
 		provided here only for operations on hive that are not described in that
 		table or for operations where there is additional semantic information.</li>
-	<li>Hive iterators meet the Cpp17BidirectionalIterator requirements but also
-		provide relational operators &lt;, &lt;=, &gt;, &gt;= and &lt;=&gt; which
-		compare the relative ordering of two iterators in the sequence.</li>
+	<li>Hive iterators meet the <i>Cpp17BidirectionalIterator</i> requirements but also
+		model <code>three_way_comparable_with</code>.</li>
 </ol>
 
 <div style="background: #ffffff; overflow:auto; width:auto; border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;">
 <pre style="margin: 0; line-height: 125%">namespace std {
 
-struct hive_limits
-{
-	size_t min;
-	size_t max;
-	constexpr hive_limits(size_t minimum, size_t maximum) noexcept : min(minimum), max(maximum) {}
-};
-
-
-
-template &lt;class T, class Allocator = allocator&lt;T&gt;&gt;
+template&lt;class T, class Allocator = allocator&lt;T&gt;&gt;
 class hive {
-private:
-	hive_limits current-limits = implementation-defined; // exposition only
-
 public:
 
 	// types
@@ -1399,9 +1380,9 @@ public:
 
 
 	constexpr hive() noexcept(noexcept(Allocator())) : hive(Allocator()) { }
-	explicit hive(const Allocator&amp;) noexcept;
-	explicit hive(hive_limits block_limits) : hive(block_limits, Allocator()) { }
-	hive(hive_limits block_limits, const Allocator&amp;);
+	constexpr explicit hive(const Allocator&amp;) noexcept;
+	constexpr explicit hive(hive_limits block_limits) : hive(block_limits, Allocator()) { }
+	constexpr hive(hive_limits block_limits, const Allocator&amp;);
 	explicit hive(size_type n, const Allocator&amp; = Allocator());
 	hive(size_type n, hive_limits block_limits, const Allocator&amp; = Allocator());
 	hive(size_type n, const T&amp; value, const Allocator&amp; = Allocator());
@@ -1463,7 +1444,7 @@ public:
 
 
 	// modifiers
-	template &lt;class... Args&gt; iterator emplace(Args&amp;&amp;... args);
+	template&lt;class... Args&gt; iterator emplace(Args&amp;&amp;... args);
 	iterator insert(const T&amp; x);
 	iterator insert(T&amp;&amp; x);
 	void insert(size_type n, const T&amp; x);
@@ -1486,16 +1467,21 @@ public:
 	template&lt;class BinaryPredicate&gt;
 		size_type unique(BinaryPredicate binary_pred);
 
-	constexpr hive_limits block_capacity_limits() const noexcept;
+	void sort();
+	template&lt;class Compare&gt; void sort(Compare comp);
+
+	hive_limits constexpr block_capacity_limits() const noexcept;
+	static constexpr hive_limits block_capacity_default_limits() noexcept;
 	static constexpr hive_limits block_capacity_hard_limits() noexcept;
 	void reshape(hive_limits block_limits);
 
 	iterator get_iterator(const_pointer p) noexcept;
 	const_iterator get_iterator(const_pointer p) const noexcept;
 
-	void sort();
-	template &lt;class Compare&gt; void sort(Compare comp);
-}
+private:
+	hive_limits current-limits = implementation-defined; // <i>exposition only</i>
+
+};
 
 
 template&lt;class InputIterator, class Allocator = allocator&lt;<i>iter-value-type</i> &lt;InputIterator&gt;&gt;
@@ -1518,9 +1504,9 @@ template&lt;ranges::input_range R, class Allocator = allocator&lt;ranges::range_
 </pre>
 </div>
 
-<h4>24.3.16.2 &nbsp;&nbsp;Constructors, copy, and assignment [hive.cons]</h4>
+<h4>Constructors, copy, and assignment [hive.cons]</h4>
 
-<code style="font-weight:bold">explicit hive(const Allocator&amp;) noexcept;</code>
+<code style="font-weight:bold">constexpr explicit hive(const Allocator&amp;) noexcept;</code>
 <ol>
 	<li>Effects: Constructs an empty <code>hive</code>, using the specified allocator.</li>
 	<li>Complexity: Constant.</li>
@@ -1528,7 +1514,7 @@ template&lt;ranges::input_range R, class Allocator = allocator&lt;ranges::range_
 
 
 <code style="font-weight:bold">
-	hive(hive_limits block_limits, const Allocator&amp;);
+	constexpr hive(hive_limits block_limits, const Allocator&amp;);
 </code>
 <ol start="3">
 	<li>Effects: Constructs an empty <code>hive</code>, using the specified allocator. Initializes <code>current-limits</code> with <code>block_limits</code>.</li>
@@ -1592,6 +1578,18 @@ template&lt;<i>container-compatible-range</i>&lt;T&gt; R&gt;
 	<li>Effects: Constructs a <code>hive</code> object with the elements of <code>il</code>, using the specified allocator. If the second overload is called, also initializes <code>current-limits</code> with <code>block_limits</code>.</li>
 	<li>Complexity: Linear in <code>il.size()</code>.</li>
 </ol>
+
+
+<code style="font-weight:bold">
+	hive&amp; operator=(hive&amp;&amp; x) noexcept(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || allocator_traits&lt;Allocator&gt;::is_always_equal::value);</code>
+<ol start="19">
+	<li>Effects: All elements in <code>*this</code> are destroyed.<br>
+	When <code>(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || allocator_traits&lt;Allocator&gt;::is_always_equal::value) == true</code>, <code>current-limits</code> is set to <code>x.current-limits</code> and all element blocks are moved from <code>x</code> into <code>*this</code>. All iterators into <code>x</code> now refer to the same elements but within <code>*this</code>.<br>
+	When <code>(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || allocator_traits&lt;Allocator&gt;::is_always_equal::value) == false</code>, if <code>x.current-limits</code> is within the bounds of <code>block_capacity_hard_limits()</code>, <code>current-limits</code> is set to <code>x.current-limits</code>. Subsequently all elements in <code>x</code> are moved into <code>*this</code> and all element blocks in <code>x</code> destroyed. All iterators into <code>x</code> are invalidated. If an exception is thrown both <code>x</code> and <code>*this</code> are left in a usable state.</li>
+	<li>Complexity: Linear in <code>size()</code>. If allocators are not equal or propogated from <code>x</code> into <code>*this</code>, also linear in <code>x.size()</code>.</li>
+	<li>Throws: If reallocation to new element blocks occurs, uses Allocator::allocate() which can throw an appropriate exception.</li>
+</ol>
+
 
 
 <h4>24.3.16.3 &nbsp;&nbsp;Capacity [hive.capacity]</h4>
@@ -1661,9 +1659,9 @@ void trim_capacity(size_type n) noexcept; </code>
 
 
 
-<h4>24.3.16.4 &nbsp;&nbsp;Modifiers [hive.modifiers]</h4>
+<h4>Modifiers [hive.modifiers]</h4>
 <pre><code style="font-weight:bold">
-template &lt;class... Args&gt;
+template&lt;class... Args&gt;
 	iterator emplace(Args&amp;&amp;... args);
 iterator insert(const T&amp; x);
 iterator insert(T&amp;&amp; x);
@@ -1706,7 +1704,7 @@ noexcept(allocator_traits&lt;Allocator&gt;::propagate_on_container_swap::value
 <br>
 
 
-<h4>24.3.16.5 &nbsp;&nbsp;Operations [hive.operations]</h4>
+<h4>Operations [hive.operations]</h4>
 <ol>
 	<li>In this subclause, arguments for a template parameter named Predicate or
 		BinaryPredicate shall meet the corresponding requirements in
@@ -1759,28 +1757,53 @@ template&lt;class BinaryPredicate&gt;
 </ol>
 
 
-<code style="font-weight: bold;">constexpr hive_limits block_capacity_limits()
-const noexcept;</code>
+<pre><code style="font-weight:bold">void sort();
+template&lt;class Compare&gt;
+	void sort(Compare comp);</code></pre>
 <ol start="13">
+	<li>Preconditions: <code>T</code> is <i>Cpp17MoveInsertable</i> and
+		<i>Cpp17MoveAssignable</i> into <code>*this</code>. lvalues of type
+		<code>T</code> are swappable.</li>
+	<li>Effects: Sorts the <code>hive</code> according to the <code>operator
+		&lt;</code> or the <code>comp</code> function object. If an exception is
+		thrown, the order of the elements in <code>*this</code> is unspecified.
+		Iterators and references to elements may be invalidated.</li>
+	<li>Complexity: <code>N log N</code> comparisons, where <code>N ==
+		size()</code>.</li>
+	<li>Remarks: May allocate<sup><a href="#r225">numbered_note</a></sup>.<br>
+		[Note: Not required to be stable ([algorithm.stable]) - end note]</li>
+</ol>
+
+<p style="font-size: 90%;">numbered_note) <code>sort()</code> uses
+<code>Allocator::allocate()</code> which can throw an appropriate exception.</p>
+
+
+<code style="font-weight: bold;">constexpr hive_limits block_capacity_limits() const noexcept;</code>
+<ol start="17">
 	<li>Effects: Returns <code>current-limits</code>.</li>
 	<li>Complexity: Constant.</li>
 </ol>
 
 
-<code style="font-weight: bold;">static constexpr hive_limits
-block_capacity_hard_limits() noexcept;</code>
-<ol start="15">
+<code style="font-weight: bold;">static constexpr hive_limits block_capacity_default_limits() noexcept;</code>
+<ol start="19">
+	<li>Returns: A <code>hive_limits</code> struct with the <code>min</code> and
+		<code>max</code> members set to the implementation's default limits.</li>
+	<li>Complexity: Constant.</li>
+</ol>
+
+
+<code style="font-weight: bold;">static constexpr hive_limits block_capacity_hard_limits() noexcept;</code>
+<ol start="21">
 	<li>Returns: A <code>hive_limits</code> struct with the <code>min</code> and
 		<code>max</code> members set to the implementation's hard limits.</li>
 	<li>Complexity: Constant.</li>
 </ol>
 
 
-<code style="font-weight: bold;">void reshape(hive_limits
-block_limits);</code>
-<ol start="17">
-	<li>Preconditions: <code>T</code> is <i>Cpp17MoveInsertable</i> into
-		<code>*this</code>.
+<code style="font-weight: bold;">void reshape(hive_limits block_limits);</code>
+<ol start="23">
+	<li>Preconditions: <code>T</code> is <i>Cpp17MoveInsertable</i> into <code>*this</code>.
  </li>
 	<li>Effects: Assigns <code>block_limits</code> to
 		<code>current-limits</code>. If any active blocks in
@@ -1808,10 +1831,9 @@ block_limits);</code>
 		[Note: If no reallocation happens, they remain valid. - end note]</li>
 </ol>
 
-<code style="font-weight: bold;">iterator get_iterator(const_pointer p)
-noexcept;<br>
+<code style="font-weight: bold;">iterator get_iterator(const_pointer p) noexcept;<br>
 const_iterator get_iterator(const_pointer p) const noexcept;</code>
-<ol start="22">
+<ol start="28">
 	<li>Preconditions: <code>p</code> points to an element in
 	<code>*this</code>.</li>
 	<li>Complexity: Linear in the number of active blocks in
@@ -1821,27 +1843,7 @@ const_iterator get_iterator(const_pointer p) const noexcept;</code>
 </ol>
 
 
-<pre><code style="font-weight:bold">void sort();
-template &lt;class Compare&gt;
-	void sort(Compare comp);</code></pre>
-<ol start="25">
-	<li>Preconditions: <code>T</code> is <i>Cpp17MoveInsertable</i> and
-		<i>Cpp17MoveAssignable</i> into <code>*this</code>. lvalues of type
-		<code>T</code> are swappable.</li>
-	<li>Effects: Sorts the <code>hive</code> according to the <code>operator
-		&lt;</code> or the <code>comp</code> function object. If an exception is
-		thrown, the order of the elements in <code>*this</code> is unspecified.
-		Iterators and references to elements may be invalidated.</li>
-	<li>Complexity: <code>N log N</code> comparisons, where <code>N ==
-		size()</code>.</li>
-	<li>Remarks: May allocate<sup><a href="#r225">numbered_note</a></sup>.<br>
-		[Note: Not required to be stable ([algorithm.stable]) - end note]</li>
-</ol>
-
-<p style="font-size: 90%;">numbered_note) <code>sort()</code> uses
-<code>Allocator::allocate()</code> which can throw an appropriate exception.</p>
-
-<h4>24.3.16.6 &nbsp;&nbsp;Erasure [hive.erasure]</h4>
+<h4>Erasure [hive.erasure]</h4>
 <pre><code style="font-weight:bold">
 template&lt;class T, class Allocator, class U&gt;
 	typename hive&lt;T, Allocator&gt;::size_type
@@ -2089,11 +2091,11 @@ between hive and colony as of the time of writing follow:</p>
  </li>
 <li><h4>How does a slot map compare to a hive?</h4>
 <p>Both a <a href="https://web.archive.org/web/20180121142549/http://seanmiddleditch.com/data-structures-for-game-developers-the-slot-map/">slot map</a> and a hive attempt to create a container where there is reasonable insertion/erasure/iteration performance while maintaining stable links from external objects to elements within the container. In the case of hive this is done with pointers/iterators, in the case of a slot map this is done with keys, which are separate to iterators (which do not stay valid post-erasure/insertion in slot maps). Each approach has some advantages, but the hive approach has more, in my view.</p>
-<p>If you use a slot map your external object also needs to store a link to the slot map in order to access an element from it's stored key (or a higher-level object accessing the external object needs to store such a link). This prevents splicing, since there is no way to ensure that keys in one slot map are unique globally, as is possible with pointers. With a hive there is no need for the external object to have knowledge of the hive instance, as pointers are sufficient to access the elements and remain valid regardless of insertion/erasure.</p>
-<p>One upside of the slot map approach is if you make a duplicate of a slot map + a duplicate of an external object which accesses it's elements via keys, and send these to a secondary thread, little work need be done - all the keys stored in the external object duplicate will work with the copied slot map, all you need to do is update the external object to use the duplicate slot map, instead of the original.</p>
-<p>If you wish to do this with a hive, pointers to it's elements in the duplicate external object will of course not point into the duplicate hive, so any external objects you copy to the secondary thread which you intend to access the hive elements, will need their pointers re-written. The easiest way to do this is by finding the indexes of the elements in the original hive instance via <code>size_type original_index = std::distance(hive.begin(), hive.get_iterator(external_object.pointers[x]));</code>, then using <code>external_object_copy.pointers[x] = &amp;*(std::next(hive_copy.begin(), original_index));</code> to write the new pointer values. Since std::distance/std::next/etc can be overloaded to be very quick for hive, this will not take too much time, but it is an inconvenience.</p>
+<p>If you use a slot map your external object also needs to store a link to the slot map in order to access an element from its stored key (or a higher-level object accessing the external object needs to store such a link). This prevents splicing, since there is no way to ensure that keys in one slot map are unique globally, as is possible with pointers. With a hive there is no need for the external object to have knowledge of the hive instance, as pointers are sufficient to access the elements and remain valid regardless of insertion/erasure.</p>
+<p>One upside of the slot map approach is if you make a duplicate of a slot map + a duplicate of an external object which accesses its elements via keys, and send these to a secondary thread, little work need be done - all the keys stored in the external object duplicate will work with the copied slot map, all you need to do is update the external object to use the duplicate slot map, instead of the original.</p>
+<p>If you wish to do this with a hive, pointers to its elements in the duplicate external object will of course not point into the duplicate hive, so any external objects you copy to the secondary thread which you intend to access the hive elements, will need their pointers re-written. The easiest way to do this is by finding the indexes of the elements in the original hive instance via <code>size_type original_index = std::distance(hive.begin(), hive.get_iterator(external_object.pointers[x]));</code>, then using <code>external_object_copy.pointers[x] = &amp;*(std::next(hive_copy.begin(), original_index));</code> to write the new pointer values. Since std::distance/std::next/etc can be overloaded to be very quick for hive, this will not take too much time, but it is an inconvenience.</p>
 
-<p>While I haven't done any benchmarks comparing hive performance to a slot map, I have done extensive benchmarks vs a <a href="http://bitsquid.blogspot.com/2011/09/managing-decoupling-part-4-id-lookup.html">packed array</a> implementation, which is arguably simpler than a slot map but has the same characteristics, and hive is faster. From the structure of a slot map it's obvious that slot maps are slower for insertion, erasure and for referencing elements within the slot map via external objects. This is because of the intermediary interfaces of the key resolution array and generation counters which need to be accessed and updated. Slot maps can however be faster for iteration since all their data is (typically, implementation-defined) stored contiguously and iteration does not use the keys/counters. In addition contiguous storage means using a slot map with SIMD is more straightforward.</p>
+<p>While I haven't done any benchmarks comparing hive performance to a slot map, I have done extensive benchmarks vs a <a href="http://bitsquid.blogspot.com/2011/09/managing-decoupling-part-4-id-lookup.html">packed array</a> implementation, which is arguably simpler than a slot map but has the same characteristics, and hive is faster. From the structure of a slot map its obvious that slot maps are slower for insertion, erasure and for referencing elements within the slot map via external objects. This is because of the intermediary interfaces of the key resolution array and generation counters which need to be accessed and updated. Slot maps can however be faster for iteration since all their data is (typically, implementation-defined) stored contiguously and iteration does not use the keys/counters. In addition contiguous storage means using a slot map with SIMD is more straightforward.</p>
 <p>Slot maps use more memory due to the keys/counters. Ignoring element block metadata, a hive implementation can use as little as 2 extra bits of metadata per element (current reference implementation is generally between 10 and 16 bits for performance reasons), but a slot map will typically
  use between 64 and 128 bits per element (or 32-64 on a 32-bit system). This will also lower performance due to higher pressure on the cache and the increased numbers of allocations/deallocations.</p>
 </li>
@@ -2609,7 +2611,7 @@ between hive and colony as of the time of writing follow:</p>
 		compiler support was not good but this has improved steadily over time. I
 		wasn't happy with having to label each and every function as constexpr, but there seem to
 		be movements toward labeling classes as a whole as constexpr, so if that
-		comes through it will remove that problem. Having said that, there are a couple
+		comes through it will remove that problem. Having said that, there are a few
 		of things to consider when designed a constexpr hive. One is that in the
 		reference implementation there is extensive use of reinterpret_cast'ing
 		pointers, mainly for two areas:</p>
@@ -2630,7 +2632,7 @@ between hive and colony as of the time of writing follow:</p>
 		and end() iterators are stored as member variables and also function as records of
 		the first and last active blocks in the sequence. This much can be worked around
 		by breaking the iterators apart into their individual pointers, then
-		reconstructing them on the fly whenever begin()/end()/etc are called.</p>
+		reconstructing them on the fly whenever begin()/end()/etc are called. This is an implementation burder though.</p>
 		<p>For the moment I am happier for std::array and std::vector to be the
 		"canaries in the coalmine" here.</p>
  </li>
@@ -2692,7 +2694,7 @@ between hive and colony as of the time of writing follow:</p>
 		</ol>
  </li>
 	<li><h4>Asides from it already being a known container type in many domains,
-		and it's performance vs other standard library containers, what are good
+		and its performance vs other standard library containers, what are good
 		reasons to standardise hive?</h4>
 		<ol type="a">
 			<li>"Build it and they will come" - quote from the movie "Field of
@@ -2710,9 +2712,9 @@ between hive and colony as of the time of writing follow:</p>
 				in 50 libreoffice source files), but it is cache-unfriendly, slow for
 				the majority of scenarios and wasteful in terms of memory. Hive is
 				cache-friendlier, faster and (in terms of reference implementation)
-				uses only one skipfield_type (8/16-bit) per element to maintain it's
+				uses only one skipfield_type (8/16-bit) per element to maintain its
 				functionality, as opposed to 2-pointers per-element for std::list. The
-				main advantage of std::list is it's ordered non-back/front
+				main advantage of std::list is its ordered non-back/front
 			insertion.</li>
 			<li>Other languages may beat us to it. I know that one person is currently
 				developing a hive-equivalent for Rust.</li>
@@ -2779,7 +2781,7 @@ verified by game developers within SG14:</p>
 	<li>Elements within data collections link to elements within other data
 		collections (through a variety of methods). These
 		links must stay valid throughout the course of the game/level. Any
-		container where most of it's operations cause pointer/index invalidation tend to creates difficulties
+		container where most of its operations cause pointer/index invalidation tend to creates difficulties
 		and necessitates workarounds.</li>
 	<li>The majority of data is simply
 		iterated over, transformed, linked to and utilized with no regard to
@@ -2949,7 +2951,7 @@ results</h3>
 
 <p>Guides and flowcharts I've seen online have either been performance-agnostic
 or incorrect. This is not a perfect guide, nor is it designed to suit all
-participants, but it should be largely correct in terms of it's focus. Note,
+participants, but it should be largely correct in terms of its focus. Note,
 this guide does not cover:</p>
 <ol type="a">
 	<li>All known C++ containers</li>
@@ -3332,7 +3334,7 @@ computational efficiency, is possible while preserving O(1) iterator operations.
 <li>Change iterator to be at start of next group in the hive, and repeat steps 3 and 4 but no others.</li>
 </ol>
 
-<p>Unfortunately this approach also means the type has to be wide enough to fit both free list indexes and the jump-counting data - which means, assuming a doubly-linked free list, the type must be at a minimum 32-bits or greater (assuming max block capacities of 255 elements, meaning the free list indexes can be 8-bit each), otherwise it's storage will need to be artificially widened to 32 bits. There is a way around this though:</p>
+<p>Unfortunately this approach also means the type has to be wide enough to fit both free list indexes and the jump-counting data - which means, assuming a doubly-linked free list, the type must be at a minimum 32-bits or greater (assuming max block capacities of 255 elements, meaning the free list indexes can be 8-bit each), otherwise its storage will need to be artificially widened to 32 bits. There is a way around this though:</p>
 
 
 <h6><a id="bit_plus_jc_complex"></a>Bitfield + jump-counting pattern - complex variant:</h6>
@@ -3439,9 +3441,9 @@ metadata memory usage by two pointers. Alternative methods include:</p>
 <ol type="a">
 	<li>Storing a vector of pointers to groups whose blocks contain erasures. To
 		preserve erase() exception guarantees, this vector would have to be
-		expanded upon insertion, not erasure, and thus it's capacity should always
+		expanded upon insertion, not erasure, and thus its capacity should always
 		be &gt;= the number of active blocks. When an active block becomes completely empty of
-		elements and is removed from the iterative sequence, it's pointer in the
+		elements and is removed from the iterative sequence, its pointer in the
 		vector would be swapped with the back pointer and popped. This approach reduces
 		the additional memory cost down to 1 pointer per active block.</li>
 	<li>Storing a record of the last one-or-more groups whose blocks have had
@@ -3585,16 +3587,16 @@ talking about std::vector, more likely a custom implementation.</p>
 
 <p>Like in the reference implementation, there are structs (referred to herein
 as 'groups') containing both an element array + skipfield array + array
-metadata such as size, capacity etc. Each group has it's own erased-element
+metadata such as size, capacity etc. Each group has its own erased-element
 free list just like the reference implementation.</p>
 
 <p>The hive contains a vector of pointers to groups (referred to herein as a
 'group-vector'). The group-vector contains 2 extra pointers, one at the front
 of the active group pointers and one at the back of the active group pointers,
-each of which has it's own location in memory as it's value (these are referred
+each of which has its own location in memory as its value (these are referred
 to herein as the <i>front</i> and <i>back</i> pointers).</p>
 
-<p>Each allocated group also contains a reverse-lookup pointer in it's metadata
+<p>Each allocated group also contains a reverse-lookup pointer in its metadata
 which points back to the pointer pointing at it in the group-vector. While this
 is used in other operations it is also used by iterator comparison operators to
 determine whether the group that iterator1 is pointing to is later than the
@@ -3615,8 +3617,8 @@ pointer in the vector, depending on whether it was decrementing or incrementing
 respectively. This is the only purpose of the front and back pointers, to inform the iterator of boundaries (see later for more details).</p>
 
 <p>When a group becomes empty of non-erased elements, it is either deallocated
-or retained for future insertions by copying it's pointer in the group-vector
-to an area past the back pointer, depending on implementation. Either way it's
+or retained for future insertions by copying its pointer in the group-vector
+to an area past the back pointer, depending on implementation. Either way its
 original pointer location in the group-vector is <code>nullptr</code>'ed.</p>
 
 <p>There is a hive member counter which counts the number of
@@ -3663,7 +3665,7 @@ point.</p>
 <h6>Alternative strategies within the above approach:</h6>
 <ol>
 	<li>One can, instead of storing all block metadata with the block, store some
-		of it with the pointer in the vector-of-pointers, or even in it's own
+		of it with the pointer in the vector-of-pointers, or even in its own
 		vector (following a struct-of-arrays-style formation).</li>
 	<li>For example, one could store capacity and size with the pointer in the
 		vector instead of in the group, and set capacity to 0 when a group is
