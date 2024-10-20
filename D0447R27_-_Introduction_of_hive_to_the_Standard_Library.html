@@ -229,7 +229,7 @@ Reply-to: Matthew Bentley &lt;mattreecebentley@gmail.com&gt;<br>
 
 <h2><a id="revisions"></a>Revision history</h2>
 <ul>
-<li>R27: Correction/optimisation to bitfield+skipfield approach to element skipping. Updated tab:containers.summary and sequence.reqmts to match current draft C++ standard. Added [diff] and [library] sections to tech spec. Other nitpicks from first LWG meeting processed. Correction to possessive usage of 'its'. Placeholder numbers in tech spec removed. "may be the back of the container when no erasures have occurred, or " removed in synopsis. Added move assignment definition as it transfers current-limits from source to destination so is not covered by blanket wording.</li>
+<li>R27: Correction/optimisation to bitfield+skipfield approach to element skipping. Updated tab:containers.summary and sequence.reqmts to match current draft C++ standard. Added [diff] and [library] sections to tech spec. Other nitpicks from first LWG meeting processed. Correction to possessive usage of 'its'. Placeholder numbers in tech spec removed. "may be the back of the container when no erasures have occurred, or " removed in synopsis. Added move assignment definition as it conditionally transfers current-limits from source to destination so is not covered by blanket wording, and copy assignment definition as it does not transfer current-limits. Added comment sections to synopsis. Added note to overview re: hard limits being constrained by allocator_traits&lt;Alloc&gt;::max_size().</li>
 	<li>R26: Tech spec changes: kona final meeting changes applied: is_active()
 		removed. Precondition added to get_iterator, Effects 'return value of end()
 		when pointer is not in <code>*this</code>' clause is removed. Heading corrections. Formatting corrections.<br>
@@ -1270,7 +1270,7 @@ namespace std {
 	 {
 		 size_t min;
 		 size_t max;
-		 constexpr hive_limits(size_t minimum, size_t maximum) noexcept : min(minimum), max(maximum) {}
+		 hive_limits(size_t minimum, size_t maximum) noexcept : min(minimum), max(maximum) {}
 	 };
 
 
@@ -1311,8 +1311,7 @@ namespace std {
 		blocks can be allocated by the user [Example: by <code>reserve</code> - end
 		example] for future use during insertions, at which point they become
 		active blocks.</li>
-	<li>Erasures use unspecified techniques to mark erased elements as being
-		erased, as opposed to relocating subsequent elements during erasure. These elements are subsequently skipped
+	<li>Erasures use unspecified techniques to mark the locations of erased elements as skippable, as opposed to relocating subsequent elements during erasure. These elements are subsequently skipped
 		during iteration. The same, or different unspecified techniques may be used
 		to record the locations of erased elements, such that those locations may
 		be reused later during insertions. All of these techniques have constant
@@ -1332,7 +1331,8 @@ namespace std {
 		implementation are not guaranteed to be the same as the minimum and maximum
 		possible capacities for an implementation's element blocks [Note 1: To
 		allow latitude for both implementation-specific and user-directed
-		optimization. - end note]. The latter are defined as <i>hard limits</i>.</p>
+		optimization. - end note]. The latter are defined as <i>hard limits</i>. The maximum hard limit shall be no
+		larger than <code>std::allocator_traits&lt;Alloc&gt;::max_size()</code>.</p>
 		<p style="text-indent: -25pt;">(5.4) &mdash; If user-specified limits are
 		not within hard limits, or if the specified minimum limit is greater than
 		the specified maximum limit, behavior is undefined.</p>
@@ -1378,7 +1378,7 @@ public:
 	using const_reverse_iterator = std::reverse_iterator&lt;const_iterator&gt;; // see [container.requirements]
 
 
-
+   // [hive.cons] construct/copy/destroy
 	constexpr hive() noexcept(noexcept(Allocator())) : hive(Allocator()) { }
 	constexpr explicit hive(const Allocator&amp;) noexcept;
 	constexpr explicit hive(hive_limits block_limits) : hive(block_limits, Allocator()) { }
@@ -1417,22 +1417,22 @@ public:
 
 
 	// iterators
-	iterator							 begin() noexcept;
-	const_iterator				 begin() const noexcept;
-	iterator							 end() noexcept;
-	const_iterator				 end() const noexcept;
-	reverse_iterator			 rbegin() noexcept;
-	const_reverse_iterator rbegin() const noexcept;
-	reverse_iterator			 rend() noexcept;
-	const_reverse_iterator rend() const noexcept;
+	iterator                begin() noexcept;
+	const_iterator          begin() const noexcept;
+	iterator                end() noexcept;
+	const_iterator          end() const noexcept;
+	reverse_iterator        rbegin() noexcept;
+	const_reverse_iterator  rbegin() const noexcept;
+	reverse_iterator        rend() noexcept;
+	const_reverse_iterator  rend() const noexcept;
 
-	const_iterator				 cbegin() const noexcept;
-	const_iterator				 cend() const noexcept;
-	const_reverse_iterator crbegin() const noexcept;
-	const_reverse_iterator crend() const noexcept;
+	const_iterator          cbegin() const noexcept;
+	const_iterator          cend() const noexcept;
+	const_reverse_iterator  crbegin() const noexcept;
+	const_reverse_iterator  crend() const noexcept;
 
 
-	// capacity
+	// [hive.capacity] capacity
 	[[nodiscard]] bool empty() const noexcept;
 	size_type size() const noexcept;
 	size_type max_size() const noexcept;
@@ -1443,7 +1443,7 @@ public:
 	void trim_capacity(size_type n) noexcept;
 
 
-	// modifiers
+	// [hive.modifiers] modifiers
 	template&lt;class... Args&gt; iterator emplace(Args&amp;&amp;... args);
 	iterator insert(const T&amp; x);
 	iterator insert(T&amp;&amp; x);
@@ -1460,7 +1460,7 @@ public:
 	void clear() noexcept;
 
 
-	// hive operations
+	// [hive.operations] hive operations
 	void splice(hive&amp; x);
 	void splice(hive&amp;&amp; x);
 	size_type unique();
@@ -1604,7 +1604,7 @@ template&lt;<i>container-compatible-range</i>&lt;T&gt; R&gt;
 
 
 
-<h4>24.3.16.3 &nbsp;&nbsp;Capacity [hive.capacity]</h4>
+<h4>Capacity [hive.capacity]</h4>
 <code style="font-weight: bold;">size_type capacity() const noexcept;</code>
 <ol>
 	<li>Returns: The total number of elements that the <code>hive</code> can hold
