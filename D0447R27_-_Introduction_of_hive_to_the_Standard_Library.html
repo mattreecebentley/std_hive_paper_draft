@@ -1266,34 +1266,34 @@ The library also provides container adaptors that make it easy to construct abst
 
 namespace std {
 
-	 struct hive_limits
-	 {
-		 size_t min;
-		 size_t max;
-		 hive_limits(size_t minimum, size_t maximum) noexcept : min(minimum), max(maximum) {}
-	 };
+  struct hive_limits
+  {
+    size_t min;
+    size_t max;
+    hive_limits(size_t minimum, size_t maximum) noexcept : min(minimum), max(maximum) {}
+  };
 
 
-	// class template hive
+  // class template hive
 
-	template &lt;class T, class Allocator = allocator&lt;T&gt;&gt; class hive;
+  template &lt;class T, class Allocator = allocator&lt;T&gt;&gt; class hive;
 
-	template&lt;class T, class Allocator&gt;
-		void swap(hive&lt;T, Allocator&gt;&amp; x, hive&lt;T, Allocator&gt;&amp; y)
-			noexcept(noexcept(x.swap(y)));
+  template&lt;class T, class Allocator&gt;
+    void swap(hive&lt;T, Allocator&gt;&amp; x, hive&lt;T, Allocator&gt;&amp; y)
+      noexcept(noexcept(x.swap(y)));
 
-	template&lt;class T, class Allocator, class U = T&gt;
-		typename hive&lt;T, Allocator&gt;::size_type
-			erase(hive&lt;T, Allocator&gt;&amp; c, const U&amp; value);
+  template&lt;class T, class Allocator, class U = T&gt;
+    typename hive&lt;T, Allocator&gt;::size_type
+      erase(hive&lt;T, Allocator&gt;&amp; c, const U&amp; value);
 
-			template&lt;class T, class Allocator, class Predicate&gt;
-		typename hive&lt;T, Allocator&gt;::size_type
-			erase_if(hive&lt;T, Allocator&gt;&amp; c, Predicate pred);
+  template&lt;class T, class Allocator, class Predicate&gt;
+    typename hive&lt;T, Allocator&gt;::size_type
+      erase_if(hive&lt;T, Allocator&gt;&amp; c, Predicate pred);
 
-	namespace pmr {
-		template &lt;class T&gt;
-			using hive = std::hive&lt;T, polymorphic_allocator&lt;T&gt;&gt;;
-	}
+  namespace pmr {
+    template &lt;class T&gt;
+      using hive = std::hive&lt;T, polymorphic_allocator&lt;T&gt;&gt;;
+  }
 }</pre>
 </div>
 
@@ -1363,142 +1363,142 @@ template&lt;class T, class Allocator = allocator&lt;T&gt;&gt;
 class hive {
 public:
 
-	// types
-	using value_type = T;
-	using allocator_type = Allocator;
-	using pointer = typename allocator_traits&lt;Allocator&gt;::pointer;
-	using const_pointer = typename allocator_traits&lt;Allocator&gt;::const_pointer;
-	using reference = value_type&amp;;
-	using const_reference = const value_type&amp;;
-	using size_type = implementation-defined; // see [container.requirements]
-	using difference_type = implementation-defined; // see [container.requirements]
-	using iterator = implementation-defined; // see [container.requirements]
-	using const_iterator = implementation-defined; // see [container.requirements]
-	using reverse_iterator = std::reverse_iterator&lt;iterator&gt;; // see [container.requirements]
-	using const_reverse_iterator = std::reverse_iterator&lt;const_iterator&gt;; // see [container.requirements]
+  // types
+  using value_type = T;
+  using allocator_type = Allocator;
+  using pointer = typename allocator_traits&lt;Allocator&gt;::pointer;
+  using const_pointer = typename allocator_traits&lt;Allocator&gt;::const_pointer;
+  using reference = value_type&amp;;
+  using const_reference = const value_type&amp;;
+  using size_type = implementation-defined; // see [container.requirements]
+  using difference_type = implementation-defined; // see [container.requirements]
+  using iterator = implementation-defined; // see [container.requirements]
+  using const_iterator = implementation-defined; // see [container.requirements]
+  using reverse_iterator = std::reverse_iterator&lt;iterator&gt;; // see [container.requirements]
+  using const_reverse_iterator = std::reverse_iterator&lt;const_iterator&gt;; // see [container.requirements]
 
 
-   // [hive.cons] construct/copy/destroy
-	constexpr hive() noexcept(noexcept(Allocator())) : hive(Allocator()) { }
-	constexpr explicit hive(const Allocator&amp;) noexcept;
-	constexpr explicit hive(hive_limits block_limits) : hive(block_limits, Allocator()) { }
-	constexpr hive(hive_limits block_limits, const Allocator&amp;);
-	explicit hive(size_type n, const Allocator&amp; = Allocator());
-	hive(size_type n, hive_limits block_limits, const Allocator&amp; = Allocator());
-	hive(size_type n, const T&amp; value, const Allocator&amp; = Allocator());
-	hive(size_type n, const T&amp; value, hive_limits block_limits, const Allocator&amp; = Allocator());
-	template&lt;class InputIterator&gt;
-		hive(InputIterator first, InputIterator last, const Allocator&amp; = Allocator());
-	template&lt;class InputIterator&gt;
-		hive(InputIterator first, InputIterator last, hive_limits block_limits, const Allocator&amp; = Allocator());
-	template&lt;<i>container-compatible-range</i>&lt;T&gt; R&gt;
-		hive(from_range_t, R&amp;&amp; rg, const Allocator&amp; = Allocator());
-	template&lt;<i>container-compatible-range</i>&lt;T&gt; R&gt;
-		hive(from_range_t, R&amp;&amp; rg, hive_limits block_limits, const Allocator&amp; = Allocator());
-	hive(const hive&amp; x);
-	hive(hive&amp;&amp;) noexcept;
-	hive(const hive&amp;, const type_identity_t&lt;Allocator&gt;&amp;);
-	hive(hive&amp;&amp;, const type_identity_t&lt;Allocator&gt;&amp;);
-	hive(initializer_list&lt;T&gt; il, const Allocator&amp; = Allocator());
-	hive(initializer_list&lt;T&gt; il, hive_limits block_limits, const Allocator&amp; = Allocator());
+  // [hive.cons] construct/copy/destroy
+  constexpr hive() noexcept(noexcept(Allocator())) : hive(Allocator()) { }
+  constexpr explicit hive(const Allocator&amp;) noexcept;
+  constexpr explicit hive(hive_limits block_limits) : hive(block_limits, Allocator()) { }
+  constexpr hive(hive_limits block_limits, const Allocator&amp;);
+  explicit hive(size_type n, const Allocator&amp; = Allocator());
+  hive(size_type n, hive_limits block_limits, const Allocator&amp; = Allocator());
+  hive(size_type n, const T&amp; value, const Allocator&amp; = Allocator());
+  hive(size_type n, const T&amp; value, hive_limits block_limits, const Allocator&amp; = Allocator());
+  template&lt;class InputIterator&gt;
+    hive(InputIterator first, InputIterator last, const Allocator&amp; = Allocator());
+  template&lt;class InputIterator&gt;
+    hive(InputIterator first, InputIterator last, hive_limits block_limits, const Allocator&amp; = Allocator());
+  template&lt;<i>container-compatible-range</i>&lt;T&gt; R&gt;
+    hive(from_range_t, R&amp;&amp; rg, const Allocator&amp; = Allocator());
+  template&lt;<i>container-compatible-range</i>&lt;T&gt; R&gt;
+    hive(from_range_t, R&amp;&amp; rg, hive_limits block_limits, const Allocator&amp; = Allocator());
+  hive(const hive&amp; x);
+  hive(hive&amp;&amp;) noexcept;
+  hive(const hive&amp;, const type_identity_t&lt;Allocator&gt;&amp;);
+  hive(hive&amp;&amp;, const type_identity_t&lt;Allocator&gt;&amp;);
+  hive(initializer_list&lt;T&gt; il, const Allocator&amp; = Allocator());
+  hive(initializer_list&lt;T&gt; il, hive_limits block_limits, const Allocator&amp; = Allocator());
 
-	~hive();
-	hive&amp; operator=(const hive&amp; x);
-	hive&amp; operator=(hive&amp;&amp; x) noexcept(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || allocator_traits&lt;Allocator&gt;::is_always_equal::value);
-	hive&amp; operator=(initializer_list&lt;T&gt;);
-	template&lt;class InputIterator&gt;
-		void assign(InputIterator first, InputIterator last);
-	template&lt;<i>container-compatible-range</i> &lt;T&gt; R&gt;
-		void assign_range(R&amp;&amp; rg);
-	void assign(size_type n, const T&amp; t);
-	void assign(initializer_list&lt;T&gt;);
-	allocator_type get_allocator() const noexcept;
-
-
-
-	// iterators
-	iterator                begin() noexcept;
-	const_iterator          begin() const noexcept;
-	iterator                end() noexcept;
-	const_iterator          end() const noexcept;
-	reverse_iterator        rbegin() noexcept;
-	const_reverse_iterator  rbegin() const noexcept;
-	reverse_iterator        rend() noexcept;
-	const_reverse_iterator  rend() const noexcept;
-
-	const_iterator          cbegin() const noexcept;
-	const_iterator          cend() const noexcept;
-	const_reverse_iterator  crbegin() const noexcept;
-	const_reverse_iterator  crend() const noexcept;
+  ~hive();
+  hive&amp; operator=(const hive&amp; x);
+  hive&amp; operator=(hive&amp;&amp; x) noexcept(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || allocator_traits&lt;Allocator&gt;::is_always_equal::value);
+  hive&amp; operator=(initializer_list&lt;T&gt;);
+  template&lt;class InputIterator&gt;
+    void assign(InputIterator first, InputIterator last);
+  template&lt;<i>container-compatible-range</i> &lt;T&gt; R&gt;
+    void assign_range(R&amp;&amp; rg);
+  void assign(size_type n, const T&amp; t);
+  void assign(initializer_list&lt;T&gt;);
+  allocator_type get_allocator() const noexcept;
 
 
-	// [hive.capacity] capacity
-	[[nodiscard]] bool empty() const noexcept;
-	size_type size() const noexcept;
-	size_type max_size() const noexcept;
-	size_type capacity() const noexcept;
-	void reserve(size_type n);
-	void shrink_to_fit();
-	void trim_capacity() noexcept;
-	void trim_capacity(size_type n) noexcept;
+
+  // iterators
+  iterator                begin() noexcept;
+  const_iterator          begin() const noexcept;
+  iterator                end() noexcept;
+  const_iterator          end() const noexcept;
+  reverse_iterator        rbegin() noexcept;
+  const_reverse_iterator  rbegin() const noexcept;
+  reverse_iterator        rend() noexcept;
+  const_reverse_iterator  rend() const noexcept;
+
+  const_iterator          cbegin() const noexcept;
+  const_iterator          cend() const noexcept;
+  const_reverse_iterator  crbegin() const noexcept;
+  const_reverse_iterator  crend() const noexcept;
 
 
-	// [hive.modifiers] modifiers
-	template&lt;class... Args&gt; iterator emplace(Args&amp;&amp;... args);
-	iterator insert(const T&amp; x);
-	iterator insert(T&amp;&amp; x);
-	void insert(size_type n, const T&amp; x);
-	template&lt;class InputIterator&gt;
-		void insert(InputIterator first, InputIterator last);
-	template&lt;<i>container-compatible-range</i> &lt;T&gt; R&gt;
-		void insert_range(R&amp;&amp; rg);
-	void insert(initializer_list&lt;T&gt; il);
-
-	iterator erase(const_iterator position);
-	iterator erase(const_iterator first, const_iterator last);
-	void swap(hive&amp;) noexcept(allocator_traits&lt;Allocator&gt;::propagate_on_container_swap::value || allocator_traits&lt;Allocator&gt;::is_always_equal::value);
-	void clear() noexcept;
+  // [hive.capacity] capacity
+  [[nodiscard]] bool empty() const noexcept;
+  size_type size() const noexcept;
+  size_type max_size() const noexcept;
+  size_type capacity() const noexcept;
+  void reserve(size_type n);
+  void shrink_to_fit();
+  void trim_capacity() noexcept;
+  void trim_capacity(size_type n) noexcept;
 
 
-	// [hive.operations] hive operations
-	void splice(hive&amp; x);
-	void splice(hive&amp;&amp; x);
-	size_type unique();
-	template&lt;class BinaryPredicate&gt;
-		size_type unique(BinaryPredicate binary_pred);
+  // [hive.modifiers] modifiers
+  template&lt;class... Args&gt; iterator emplace(Args&amp;&amp;... args);
+  iterator insert(const T&amp; x);
+  iterator insert(T&amp;&amp; x);
+  void insert(size_type n, const T&amp; x);
+  template&lt;class InputIterator&gt;
+    void insert(InputIterator first, InputIterator last);
+  template&lt;<i>container-compatible-range</i> &lt;T&gt; R&gt;
+    void insert_range(R&amp;&amp; rg);
+  void insert(initializer_list&lt;T&gt; il);
 
-	void sort();
-	template&lt;class Compare&gt; void sort(Compare comp);
+  iterator erase(const_iterator position);
+  iterator erase(const_iterator first, const_iterator last);
+  void swap(hive&amp;) noexcept(allocator_traits&lt;Allocator&gt;::propagate_on_container_swap::value || allocator_traits&lt;Allocator&gt;::is_always_equal::value);
+  void clear() noexcept;
 
-	hive_limits constexpr block_capacity_limits() const noexcept;
-	static constexpr hive_limits block_capacity_default_limits() noexcept;
-	static constexpr hive_limits block_capacity_hard_limits() noexcept;
-	void reshape(hive_limits block_limits);
 
-	iterator get_iterator(const_pointer p) noexcept;
-	const_iterator get_iterator(const_pointer p) const noexcept;
+  // [hive.operations] hive operations
+  void splice(hive&amp; x);
+  void splice(hive&amp;&amp; x);
+  size_type unique();
+  template&lt;class BinaryPredicate&gt;
+    size_type unique(BinaryPredicate binary_pred);
+
+  void sort();
+  template&lt;class Compare&gt; void sort(Compare comp);
+
+  hive_limits constexpr block_capacity_limits() const noexcept;
+  static constexpr hive_limits block_capacity_default_limits() noexcept;
+  static constexpr hive_limits block_capacity_hard_limits() noexcept;
+  void reshape(hive_limits block_limits);
+
+  iterator get_iterator(const_pointer p) noexcept;
+  const_iterator get_iterator(const_pointer p) const noexcept;
 
 private:
-	hive_limits current-limits = implementation-defined; // <i>exposition only</i>
+  hive_limits current-limits = implementation-defined; // <i>exposition only</i>
 
 };
 
 
 template&lt;class InputIterator, class Allocator = allocator&lt;<i>iter-value-type</i> &lt;InputIterator&gt;&gt;
-	hive(InputIterator, InputIterator, Allocator = Allocator())
-		-&gt; hive&lt;<i>iter-value-type</i> &lt;InputIterator&gt;, Allocator&gt;;
+  hive(InputIterator, InputIterator, Allocator = Allocator())
+    -&gt; hive&lt;<i>iter-value-type</i> &lt;InputIterator&gt;, Allocator&gt;;
 
 template&lt;class InputIterator, class Allocator = allocator&lt;<i>iter-value-type</i> &lt;InputIterator&gt;&gt;
-	hive(InputIterator, InputIterator, hive_limits block_limits, Allocator = Allocator())
-		-&gt; hive&lt;<i>iter-value-type</i> &lt;InputIterator&gt;, block_limits, Allocator&gt;;
+  hive(InputIterator, InputIterator, hive_limits block_limits, Allocator = Allocator())
+    -&gt; hive&lt;<i>iter-value-type</i> &lt;InputIterator&gt;, block_limits, Allocator&gt;;
 
 template&lt;ranges::input_range R, class Allocator = allocator&lt;ranges::range_value_t&lt;R&gt;&gt;&gt;
-	hive(from_range_t, R&amp;&amp;, Allocator = Allocator())
-		-&gt; hive&lt;ranges::range_value_t&lt;R&gt;, Allocator&gt;;
+  hive(from_range_t, R&amp;&amp;, Allocator = Allocator())
+    -&gt; hive&lt;ranges::range_value_t&lt;R&gt;, Allocator&gt;;
 
 template&lt;ranges::input_range R, class Allocator = allocator&lt;ranges::range_value_t&lt;R&gt;&gt;&gt;
-	hive(from_range_t, R&amp;&amp;, hive_limits block_limits, Allocator = Allocator())
-		-&gt; hive&lt;ranges::range_value_t&lt;R&gt;, block_limits, Allocator&gt;;
+  hive(from_range_t, R&amp;&amp;, hive_limits block_limits, Allocator = Allocator())
+    -&gt; hive&lt;ranges::range_value_t&lt;R&gt;, block_limits, Allocator&gt;;
 }
 
 </pre>
@@ -1548,9 +1548,9 @@ hive(size_type n, const T&amp; value, hive_limits block_limits, const Allocator&
 
 <pre><code style="font-weight:bold">
 template&lt;class InputIterator&gt;
-	hive(InputIterator first, InputIterator last, const Allocator&amp; = Allocator());
+  hive(InputIterator first, InputIterator last, const Allocator&amp; = Allocator());
 template&lt;class InputIterator&gt;
-	hive(InputIterator first, InputIterator last, hive_limits block_limits, const Allocator&amp; = Allocator());</code></pre>
+  hive(InputIterator first, InputIterator last, hive_limits block_limits, const Allocator&amp; = Allocator());</code></pre>
 <ol start="11">
 	<li>Effects: Constructs a <code>hive</code> equal to the range [<code>first, last</code>), using the specified allocator.
  If the second overload is called, also initializes <code>current-limits</code> with <code>block_limits</code>.</li>
@@ -1560,9 +1560,9 @@ template&lt;class InputIterator&gt;
 
 <pre><code style="font-weight:bold">
 template&lt;<i>container-compatible-range</i>&lt;T&gt; R&gt;
-	hive(from_range_t, R&amp;&amp; rg, const Allocator&amp; = Allocator());
+  hive(from_range_t, R&amp;&amp; rg, const Allocator&amp; = Allocator());
 template&lt;<i>container-compatible-range</i>&lt;T&gt; R&gt;
-	hive(from_range_t, R&amp;&amp; rg, hive_limits block_limits, const Allocator&amp; = Allocator());</code></pre>
+  hive(from_range_t, R&amp;&amp; rg, hive_limits block_limits, const Allocator&amp; = Allocator());</code></pre>
 <ol start="13">
 	<li>Effects: Constructs a <code>hive</code> object with the elements of the range <code>rg</code>, using the specified allocator. If the second overload is called, also initializes <code>current-limits</code> with <code>block_limits</code>.</li>
 	<li>Complexity: Linear in <code>ranges::distance(rg)</code>.</li>
@@ -1595,9 +1595,8 @@ template&lt;<i>container-compatible-range</i>&lt;T&gt; R&gt;
 	hive&amp; operator=(hive&amp;&amp; x) noexcept(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || allocator_traits&lt;Allocator&gt;::is_always_equal::value);</code>
 <ol start="22">
 	<li>Effects: All elements in <code>*this</code> are destroyed.<br>
-	When <code>(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || allocator_traits&lt;Allocator&gt;::is_always_equal::value) == true</code>, <code>current-limits</code> is set to <code>x.current-limits</code> and all element blocks are moved from <code>x</code> into <code>*this</code>. All iterators into <code>x</code> now refer to the same elements but within <code>*this</code>.<br>
-	When <code>(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || allocator_traits&lt;Allocator&gt;::is_always_equal::value) == false</code>, all elements in <code>x</code> are moved into <code>*this</code> and all element blocks in <code>x</code> destroyed. All iterators into <code>x</code> are invalidated. If an exception is thrown other than by the move constructor of
-		a non-<i>Cpp17CopyInsertable</i> <code>T</code>, both <code>x</code> and <code>*this</code> are left in a usable state.</li>
+	When <code>(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || allocator_traits&lt;Allocator&gt;::is_always_equal::value) == true</code>, <code>current-limits</code> is set to <code>x.current-limits</code> and all element blocks are moved from <code>x</code> into <code>*this</code>. Pointers and references to the elements of <code>x</code> now refer to those same elements but as members of <code>*this</code>. Iterators referring to the elements of <code>x</code> will continue to refer to their elements, but they now behave as iterators into <code>*this</code>, not into <code>x</code>.<br>
+	When <code>(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || allocator_traits&lt;Allocator&gt;::is_always_equal::value) == false</code>, all elements in <code>x</code> are moved into <code>*this</code> and all element blocks in <code>x</code> are destroyed. Iterators, pointers and references referring to the elements of <code>x</code> are invalidated. If an exception is thrown other than by the move constructor of a non-<i>Cpp17CopyInsertable</i> <code>T</code>, both <code>x</code> and <code>*this</code> are left in a usable state.</li>
 	<li>Complexity: Linear in <code>size()</code>. If allocators are not equal or propogated from <code>x</code> into <code>*this</code>, also linear in <code>x.size()</code>.</li>
 	<li>Throws: If reallocation to new element blocks occurs, uses <code>Allocator::allocate()</code> which can throw an appropriate exception.</li>
 </ol>
@@ -1674,14 +1673,14 @@ void trim_capacity(size_type n) noexcept; </code>
 <h4>Modifiers [hive.modifiers]</h4>
 <pre><code style="font-weight:bold">
 template&lt;class... Args&gt;
-	iterator emplace(Args&amp;&amp;... args);
+  iterator emplace(Args&amp;&amp;... args);
 iterator insert(const T&amp; x);
 iterator insert(T&amp;&amp; x);
 void insert(size_type n, const T&amp; x);
 template&lt;class InputIterator&gt;
-	void insert(InputIterator first, InputIterator last);
+  void insert(InputIterator first, InputIterator last);
 template&lt;<i>container-compatible-range</i> &lt;T&gt; R&gt;
-	void insert_range(R&amp;&amp; rg);
+  void insert_range(R&amp;&amp; rg);
 void insert(initializer_list&lt;T&gt; il);</code></pre>
 <ol>
 	<li>Complexity: Linear in the number of elements inserted. The constructor of
@@ -1750,7 +1749,7 @@ void splice(hive &amp;&amp;x);</code>
 
 <pre><code style="font-weight:bold">size_type unique();
 template&lt;class BinaryPredicate&gt;
-	size_type unique(BinaryPredicate binary_pred);</code></pre>
+  size_type unique(BinaryPredicate binary_pred);</code></pre>
 <ol start="7">
 	<li>Let <code>binary_pred</code> be <code>equal_to&lt; &gt;{}</code> for the
 		first overload.</li>
@@ -1771,7 +1770,7 @@ template&lt;class BinaryPredicate&gt;
 
 <pre><code style="font-weight:bold">void sort();
 template&lt;class Compare&gt;
-	void sort(Compare comp);</code></pre>
+  void sort(Compare comp);</code></pre>
 <ol start="13">
 	<li>Preconditions: <code>T</code> is <i>Cpp17MoveInsertable</i> and
 		<i>Cpp17MoveAssignable</i> into <code>*this</code>. lvalues of type
@@ -1858,8 +1857,8 @@ const_iterator get_iterator(const_pointer p) const noexcept;</code>
 <h4>Erasure [hive.erasure]</h4>
 <pre><code style="font-weight:bold">
 template&lt;class T, class Allocator, class U&gt;
-	typename hive&lt;T, Allocator&gt;::size_type
-		erase(hive&lt;T, Allocator&gt;&amp; c, const U&amp; value);</code></pre>
+  typename hive&lt;T, Allocator&gt;::size_type
+    erase(hive&lt;T, Allocator&gt;&amp; c, const U&amp; value);</code></pre>
 <ol>
 <li>Effects: Equivalent to:
 <pre><code style="font-weight:bold">return erase_if(c, [&amp;](auto&amp; elem) { return elem == value; });</code></pre>
@@ -1869,20 +1868,19 @@ template&lt;class T, class Allocator, class U&gt;
 
 <pre><code style="font-weight:bold">
 template&lt;class T, class Allocator, class Predicate&gt;
-	typename hive&lt;T, Allocator&gt;::size_type
-		erase_if(hive&lt;T, Allocator&gt;&amp; c, Predicate pred);
+  typename hive&lt;T, Allocator&gt;::size_type
+    erase_if(hive&lt;T, Allocator&gt;&amp; c, Predicate pred);
 </code></pre>
 <ol start="2">
-<li>
-Effects: Equivalent to:
+<li>Effects: Equivalent to:
 <pre><code style="font-weight:bold">
 auto original_size = c.size();
 for (auto i = c.begin(), last = c.end(); i != last; ) {
-	if (pred(*i)) {
-		i = c.erase(i);
-	} else {
-		++i;
-	}
+  if (pred(*i)) {
+    i = c.erase(i);
+    } else {
+      ++i;
+  }
 }
 return original_size - c.size();
 </code></pre>
@@ -1937,23 +1935,23 @@ reference implementation</a>.</p>
 
 <span style="color: #333399; font-weight: bold">int</span> <span style="color: #0066BB; font-weight: bold">main</span>(<span style="color: #333399; font-weight: bold">int</span> argc, <span style="color: #333399; font-weight: bold">char</span> <span style="color: #333333">**</span>argv)
 {
-	plf<span style="color: #333333">::</span>hive<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">int</span><span style="color: #333333">&gt;</span> i_hive;
+  plf<span style="color: #333333">::</span>hive<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">int</span><span style="color: #333333">&gt;</span> i_hive;
 
-	<span style="color: #888888">// Insert 100 ints:</span>
-	<span style="color: #008800; font-weight: bold">for</span> (<span style="color: #333399; font-weight: bold">int</span> i <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">0</span>; i <span style="color: #333333">!=</span> <span style="color: #0000DD; font-weight: bold">100</span>; <span style="color: #333333">++</span>i)
-	{
-		i_hive.insert(i);
-	}
+  <span style="color: #888888">// Insert 100 ints:</span>
+  <span style="color: #008800; font-weight: bold">for</span> (<span style="color: #333399; font-weight: bold">int</span> i <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">0</span>; i <span style="color: #333333">!=</span> <span style="color: #0000DD; font-weight: bold">100</span>; <span style="color: #333333">++</span>i)
+  {
+    i_hive.insert(i);
+  }
 
-	<span style="color: #888888">// Erase half of them:</span>
-	<span style="color: #008800; font-weight: bold">for</span> (plf<span style="color: #333333">::</span>hive<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">int</span><span style="color: #333333">&gt;::</span>iterator it <span style="color: #333333">=</span> i_hive.begin(); it <span style="color: #333333">!=</span> i_hive.end(); <span style="color: #333333">++</span>it)
-	{
-		it <span style="color: #333333">=</span> i_hive.erase(it);
-	}
+  <span style="color: #888888">// Erase half of them:</span>
+  <span style="color: #008800; font-weight: bold">for</span> (plf<span style="color: #333333">::</span>hive<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">int</span><span style="color: #333333">&gt;::</span>iterator it <span style="color: #333333">=</span> i_hive.begin(); it <span style="color: #333333">!=</span> i_hive.end(); <span style="color: #333333">++</span>it)
+  {
+    it <span style="color: #333333">=</span> i_hive.erase(it);
+  }
 
-	std<span style="color: #333333">::</span>cout <span style="color: #333333">&lt;&lt;</span> <span style="background-color: #fff0f0">"Total: "</span> <span style="color: #333333">&lt;&lt;</span> std::accumulate(i_hive.begin(), i_hive.end(), 0) <span style="color: #333333">&lt;&lt;</span> std<span style="color: #333333">::</span>endl;
-	std<span style="color: #333333">::</span>cin.get();
-	<span style="color: #008800; font-weight: bold">return</span> <span style="color: #0000DD; font-weight: bold">0</span>;
+  std<span style="color: #333333">::</span>cout <span style="color: #333333">&lt;&lt;</span> <span style="background-color: #fff0f0">"Total: "</span> <span style="color: #333333">&lt;&lt;</span> std::accumulate(i_hive.begin(), i_hive.end(), 0) <span style="color: #333333">&lt;&lt;</span> std<span style="color: #333333">::</span>endl;
+  std<span style="color: #333333">::</span>cin.get();
+  <span style="color: #008800; font-weight: bold">return</span> <span style="color: #0000DD; font-weight: bold">0</span>;
 } </code></pre>
 </div>
 
@@ -1966,47 +1964,47 @@ style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-wi
 
 <span style="color: #333399; font-weight: bold">int</span> <span style="color: #0066BB; font-weight: bold">main</span>(<span style="color: #333399; font-weight: bold">int</span> argc, <span style="color: #333399; font-weight: bold">char</span> <span style="color: #333333">**</span>argv)
 {
-	plf<span style="color: #333333">::</span>hive<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">int</span><span style="color: #333333">&gt;</span> i_hive;
-	plf<span style="color: #333333">::</span>hive<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">int</span><span style="color: #333333">&gt;::</span>iterator it;
-	plf<span style="color: #333333">::</span>hive<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">int</span> <span style="color: #333333">*&gt;</span> p_hive;
-	plf<span style="color: #333333">::</span>hive<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">int</span> <span style="color: #333333">*&gt;::</span>iterator p_it;
+  plf<span style="color: #333333">::</span>hive<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">int</span><span style="color: #333333">&gt;</span> i_hive;
+  plf<span style="color: #333333">::</span>hive<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">int</span><span style="color: #333333">&gt;::</span>iterator it;
+  plf<span style="color: #333333">::</span>hive<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">int</span> <span style="color: #333333">*&gt;</span> p_hive;
+  plf<span style="color: #333333">::</span>hive<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">int</span> <span style="color: #333333">*&gt;::</span>iterator p_it;
 
-	<span style="color: #888888">// Insert 100 ints to i_hive and pointers to those ints to p_hive:</span>
-	<span style="color: #008800; font-weight: bold">for</span> (<span style="color: #333399; font-weight: bold">int</span> i <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">0</span>; i <span style="color: #333333">!=</span> <span style="color: #0000DD; font-weight: bold">100</span>; <span style="color: #333333">++</span>i)
-	{
-		it <span style="color: #333333">=</span> i_hive.insert(i);
-		p_hive.insert(<span style="color: #333333">&amp;</span>(<span style="color: #333333">*</span>it));
-	}
+  <span style="color: #888888">// Insert 100 ints to i_hive and pointers to those ints to p_hive:</span>
+  <span style="color: #008800; font-weight: bold">for</span> (<span style="color: #333399; font-weight: bold">int</span> i <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">0</span>; i <span style="color: #333333">!=</span> <span style="color: #0000DD; font-weight: bold">100</span>; <span style="color: #333333">++</span>i)
+  {
+    it <span style="color: #333333">=</span> i_hive.insert(i);
+    p_hive.insert(<span style="color: #333333">&amp;</span>(<span style="color: #333333">*</span>it));
+  }
 
-	<span style="color: #888888">// Erase half of the ints:</span>
-	<span style="color: #008800; font-weight: bold">for</span> (it <span style="color: #333333">=</span> i_hive.begin(); it <span style="color: #333333">!=</span> i_hive.end(); <span style="color: #333333">++</span>it)
-	{
-		it <span style="color: #333333">=</span> i_hive.erase(it);
-	}
+  <span style="color: #888888">// Erase half of the ints:</span>
+  <span style="color: #008800; font-weight: bold">for</span> (it <span style="color: #333333">=</span> i_hive.begin(); it <span style="color: #333333">!=</span> i_hive.end(); <span style="color: #333333">++</span>it)
+  {
+    it <span style="color: #333333">=</span> i_hive.erase(it);
+  }
 
-	<span style="color: #888888">// Erase half of the int pointers:</span>
-	<span style="color: #008800; font-weight: bold">for</span> (p_it <span style="color: #333333">=</span> p_hive.begin(); p_it <span style="color: #333333">!=</span> p_hive.end(); <span style="color: #333333">++</span>p_it)
-	{
-		p_it <span style="color: #333333">=</span> p_hive.erase(p_it);
-	}
+  <span style="color: #888888">// Erase half of the int pointers:</span>
+  <span style="color: #008800; font-weight: bold">for</span> (p_it <span style="color: #333333">=</span> p_hive.begin(); p_it <span style="color: #333333">!=</span> p_hive.end(); <span style="color: #333333">++</span>p_it)
+  {
+    p_it <span style="color: #333333">=</span> p_hive.erase(p_it);
+  }
 
-	<span style="color: #888888">// Total the remaining ints via the pointer hive (pointers will still be valid even after insertions and erasures):</span>
-	<span style="color: #333399; font-weight: bold">int</span> total <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">0</span>;
+  <span style="color: #888888">// Total the remaining ints via the pointer hive (pointers will still be valid even after insertions and erasures):</span>
+  <span style="color: #333399; font-weight: bold">int</span> total <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">0</span>;
 
-	<span style="color: #008800; font-weight: bold">for</span> (p_it <span style="color: #333333">=</span> p_hive.begin(); p_it <span style="color: #333333">!=</span> p_hive.end(); <span style="color: #333333">++</span>p_it)
-	{
-		total <span style="color: #333333">+=</span> <span style="color: #333333">*</span>(<span style="color: #333333">*</span>p_it);
-	}
+  <span style="color: #008800; font-weight: bold">for</span> (p_it <span style="color: #333333">=</span> p_hive.begin(); p_it <span style="color: #333333">!=</span> p_hive.end(); <span style="color: #333333">++</span>p_it)
+  {
+    total <span style="color: #333333">+=</span> <span style="color: #333333">*</span>(<span style="color: #333333">*</span>p_it);
+  }
 
-	std<span style="color: #333333">::</span>cout <span style="color: #333333">&lt;&lt;</span> <span style="background-color: #fff0f0">"Total: "</span> <span style="color: #333333">&lt;&lt;</span> total <span style="color: #333333">&lt;&lt;</span> std<span style="color: #333333">::</span>endl;
+  std<span style="color: #333333">::</span>cout <span style="color: #333333">&lt;&lt;</span> <span style="background-color: #fff0f0">"Total: "</span> <span style="color: #333333">&lt;&lt;</span> total <span style="color: #333333">&lt;&lt;</span> std<span style="color: #333333">::</span>endl;
 
-	<span style="color: #008800; font-weight: bold">if</span> (total <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">2500</span>)
-	{
-		std<span style="color: #333333">::</span>cout <span style="color: #333333">&lt;&lt;</span> <span style="background-color: #fff0f0">"Pointers still valid!"</span> <span style="color: #333333">&lt;&lt;</span> std<span style="color: #333333">::</span>endl;
-	}
+  <span style="color: #008800; font-weight: bold">if</span> (total <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">2500</span>)
+  {
+    std<span style="color: #333333">::</span>cout <span style="color: #333333">&lt;&lt;</span> <span style="background-color: #fff0f0">"Pointers still valid!"</span> <span style="color: #333333">&lt;&lt;</span> std<span style="color: #333333">::</span>endl;
+  }
 
-	std<span style="color: #333333">::</span>cin.get();
-	<span style="color: #008800; font-weight: bold">return</span> <span style="color: #0000DD; font-weight: bold">0</span>;
+  std<span style="color: #333333">::</span>cin.get();
+  <span style="color: #008800; font-weight: bold">return</span> <span style="color: #0000DD; font-weight: bold">0</span>;
 } </code></pre>
 </div>
 
