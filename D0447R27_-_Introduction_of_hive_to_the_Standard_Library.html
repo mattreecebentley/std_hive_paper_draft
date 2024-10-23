@@ -229,7 +229,7 @@ Reply-to: Matthew Bentley &lt;mattreecebentley@gmail.com&gt;<br>
 
 <h2><a id="revisions"></a>Revision history</h2>
 <ul>
-<li>R27: Correction/optimisation to bitfield+skipfield approach to element skipping. Updated tab:containers.summary and sequence.reqmts to match current draft C++ standard. Added [diff] and [library] sections to tech spec. Other nitpicks from first LWG meeting processed. Correction to possessive usage of 'its'. Placeholder numbers in tech spec removed. "may be the back of the container when no erasures have occurred, or " removed in synopsis. Added move assignment definition as it conditionally transfers current-limits from source to destination so is not covered by blanket wording, and copy assignment definition as it does not transfer current-limits. Added comment sections to synopsis. Added note to overview re: hard limits being constrained by allocator_traits&lt;Alloc&gt;::max_size(). Update to appendix info for supporting small types, given that I found a better/cheaper alternative.</li>
+<li>R27: Correction/optimisation to bitset+skipfield approach to element skipping. Updated tab:containers.summary and sequence.reqmts to match current draft C++ standard. Added [diff] and [library] sections to tech spec. Other nitpicks from first LWG meeting processed. Correction to possessive usage of 'its'. Placeholder numbers in tech spec removed. "may be the back of the container when no erasures have occurred, or " removed in synopsis. Added move assignment definition as it conditionally transfers current-limits from source to destination so is not covered by blanket wording, and copy assignment definition as it does not transfer current-limits. Added comment sections to synopsis. Added note to overview re: hard limits being constrained by allocator_traits&lt;Alloc&gt;::max_size(). Update to appendix info for supporting small types, given that I found a better/cheaper alternative. Changed all references to 'bitfield' to 'bitset' to avoid ambiguity in the context of C++.</li>
 	<li>R26: Tech spec changes: kona final meeting changes applied: is_active()
 		removed. Precondition added to get_iterator, Effects 'return value of end()
 		when pointer is not in <code>*this</code>' clause is removed. Heading corrections. Formatting corrections.<br>
@@ -247,7 +247,7 @@ Reply-to: Matthew Bentley &lt;mattreecebentley@gmail.com&gt;<br>
 		iterator comparison operators and swap where necessary). Some corrections
 		to FAQ. Info about lack of resize() moved from Design Decisions to FAQ.
 		Time complexity appendix removed and info moved into Design Decisions
-		section for individual functions, to avoid repetition. Changed 'over-alignment' to 'artificial widening the storage' as it is more accurate. Changed "bitfield + jump-counting" approach in alt implementation appendix to cover smaller types. Added 3 better approaches to 'supporting very small types' under alt implementation appendix. Corrected some links. Add section about comparison to slot maps to FAQ.</li>
+		section for individual functions, to avoid repetition. Changed 'over-alignment' to 'artificial widening the storage' as it is more accurate. Changed "bitset + jump-counting" approach in alt implementation appendix to cover smaller types. Added 3 better approaches to 'supporting very small types' under alt implementation appendix. Corrected some links. Add section about comparison to slot maps to FAQ.</li>
 	<li>R25: Publication of mid-Kona intra-conference draft updates (based on
 		committee feedback) for book-keeping: Update to reshape's exception
 		guarantees. Add 'invalidates past-the-end iterators' for splice. Add
@@ -530,7 +530,7 @@ are defined:</p>
 	<li>Reserved blocks: memory blocks of type T, which do not contain elements but which are
 		retained by a multiple-memory-block container for future insertions.</li>
 	<li>Element blocks: both active and reserved blocks.</li>
-	<li>Skipfield: An array of integers or a bitfield, used to skip over certain
+	<li>Skipfield: An array of integers or a bitset, used to skip over certain
 		objects in an accompanying data structure during iteration or processing.
 		In the context of a container typically used to indicate erased elements.</li>
 	<li>Skipblock: a run of elements which are contiguous in memory and designated to be skipped
@@ -2405,7 +2405,7 @@ between hive and colony as of the time of writing follow:</p>
 		<p>This was a hint to the implementation to prioritize for lowered memory
 		usage or performance specifically. In other implementations this could've,
 		for example, been used to switch between a jump-counting skipfield
-		and the bitfield+jump-counting approach described in the <a href="#non_reference_implementations_info">alternative implementations
+		and the bitset+jump-counting approach described in the <a href="#non_reference_implementations_info">alternative implementations
 		appendix</a> (reducing memory cost at cost of performance). In the early
 		reference implementation, this told the container to switch between 16-bit
 		and 8-bit skipfield types (smaller bitdepth skipfield types limit the block
@@ -2439,7 +2439,7 @@ between hive and colony as of the time of writing follow:</p>
 		retention strategy to use when an active block becomes empty of
 		elements. Having a priority tag also gave the ability to specify new
 		priority values in future as part of the standard, potentially allowing for
-		big changes without breaking ABI. It could also have been used to switch between an implementation using a pure jump-counting skipfield (max 16-bits per element), and a bitfield + jump-counting approach (1 bit per element as described in the alt implementations appendix). However,
+		big changes without breaking ABI. It could also have been used to switch between an implementation using a pure jump-counting skipfield (max 16-bits per element), and a bitset + jump-counting approach (1 bit per element as described in the alt implementations appendix). However,
 		it is also a matter of complexity vs simplicity, and simplicity is worthwhile too.</p>
  </li>
 	<li><h4>Why does a bidirectional container have iterator operators &gt; &lt;,
@@ -2642,7 +2642,7 @@ between hive and colony as of the time of writing follow:</p>
 		and end() iterators are stored as member variables and also function as records of
 		the first and last active blocks in the sequence. This much can be worked around
 		by breaking the iterators apart into their individual pointers, then
-		reconstructing them on the fly whenever begin()/end()/etc are called. This is an implementation burder though.</p>
+		reconstructing them on the fly whenever begin()/end()/etc are called. This is an implementation burden though.</p>
 		<p>For the moment I am happier for std::array and std::vector to be the
 		"canaries in the coalmine" here.</p>
  </li>
@@ -2832,7 +2832,7 @@ most likely the following or derivatives thereof:</p>
 		situations.<br>
 		<br>
 		Advantages: Fast "deactivation". Easy to manage in multi-threaded
-		environments. Memory cost can be low if a bitfield is used.<br>
+		environments. Memory cost can be low if a bitset is used.<br>
 		Disadvantages: Can be slower to iterate due to branching code, potential
 		bit access, and unknown number of inactive elements between any two active
 		elements. The latter creates variable latency when iterating and violates
@@ -3266,7 +3266,7 @@ for this sort of thing): <a href="https://www.youtube.com/watch?v=COQKyOCAxOQ&am
 
 <p>Going over old colony emails I found someone whose company had
 implemented something like the above but with atomic 64-bit integers for
-boolean (bitfield) skipfields and multi-blocks for multithreaded use.</p>
+boolean (bitset) skipfields and multi-blocks for multithreaded use.</p>
 
 <p>I initially thought while I was developing this that it was a newish concept, but
  particularly after doing the cppcon talk, more people
@@ -3319,27 +3319,27 @@ brings with it unacceptably unpredictable latency.</p>
 <i>and</i> a boolean skipfield, which saves memory at the expense of
 computational efficiency, is possible while preserving O(1) iterator operations. There is a simpler version of this, and a more complex version - both of which have some advantages.</p>
 
-<h6><a id="bit_plus_jc"></a>Bitfield + jump-counting pattern - simple variant:</h6>
+<h6><a id="bit_plus_jc"></a>Bitset + jump-counting pattern - simple variant:</h6>
 
 <ul>
 	<li>Instead of storing the data for the jump-counting pattern in its own
-		skipfield, have a boolean bitfield indicating which elements are erased - 0 for non-erased, 1 for erased.
+		skipfield, have a boolean bitset indicating which elements are erased - 0 for non-erased, 1 for erased.
 		Store the jump-counting data in the erased element's memory space
 		(possibly alongside free list data).</li>
 	<li>When iterating, check whether the element is erased or not using the
-		bitfield; if it is not erased, do nothing. If it is erased, read the jump
+		bitset; if it is not erased, do nothing. If it is erased, read the jump
 		value from the erased element's memory space and skip forward or backward
 		(depending on the direction of iterator) the appropriate number of nodes,
-		both in the element block and the bitfield.</li>
+		both in the element block and the bitset.</li>
 </ul>
 
-<p>This approach does reduce the memory overhead of the skipfield to 1 bit per-element, but introduces 3 additional sets of operations per iteration via (1) branching operations when checking the bitfield, (2) bitmasking + bitshift to read the bits and (3) additional reads (from the erased element memory space). The operation can be made branch-free (asides from the end of end-of-block check) by multiplying the bitfield entry by the jump value and adding the result to the iterator's current element pointer and bitfield index. ++ iteration then becomes:</p>
+<p>This approach does reduce the memory overhead of the skipfield to 1 bit per-element, but introduces 3 additional sets of operations per iteration via (1) branching operations when checking the bitset, (2) bitmasking + bitshift to read the bits and (3) additional reads (from the erased element memory space). The operation can be made branch-free (asides from the end of end-of-block check) by multiplying the bitset entry by the jump value and adding the result to the iterator's current element pointer and bitset index. ++ iteration then becomes:</p>
 
 <ol>
-<li>Add 1 to the current element pointer/index and the current bitfield index.</li>
+<li>Add 1 to the current element pointer/index and the current bitset index.</li>
 <li>Check to see if we are now beyond the end of the element block. If so, go to step 6. If not, go to step 3.</li>
-<li>Read the part of the element's memory space which would contain the jump value, if the element were erased. Multiply this value by the current bitfield value (0 for non-erased, 1 for erased).</li>
-<li>Add this value to the current element pointer/index and the current bitfield index.</li>
+<li>Read the part of the element's memory space which would contain the jump value, if the element were erased. Multiply this value by the current bitset value (0 for non-erased, 1 for erased).</li>
+<li>Add this value to the current element pointer/index and the current bitset index.</li>
 <li>Check if iterator is at end of block. If so, proceed to step 6, if not ++ operation is finished.</li>
 <li>Change iterator to be at start of next group in the hive, and repeat steps 3 and 4 but no others.</li>
 </ol>
@@ -3347,33 +3347,33 @@ computational efficiency, is possible while preserving O(1) iterator operations.
 <p>Unfortunately this approach also means the type has to be wide enough to fit both free list indexes and the jump-counting data - which means, assuming a doubly-linked free list, the type must be at a minimum 32-bits or greater (assuming max block capacities of 255 elements, meaning the free list indexes can be 8-bit each), otherwise its storage will need to be artificially widened to 32 bits. There is a way around this though:</p>
 
 
-<h6><a id="bit_plus_jc_complex"></a>Bitfield + jump-counting pattern - complex variant:</h6>
+<h6><a id="bit_plus_jc_complex"></a>Bitset + jump-counting pattern - complex variant:</h6>
 
 <ul>
-<li>As with the simple variant, we have a bitfield indicating which elements are erased.</li>
+<li>As with the simple variant, we have a bitset indicating which elements are erased.</li>
 <li>If skipblock contains only one 1 element, there is no need to store jump-counting data - we only store free list data in the erased element memory space of the (singular) erased element.</li>
 <li>If skipblock is &gt; 1 elements, store the jump-counting data in the memory space of the 2nd erased element + the last erased element in the skipblock. The latter is used with -- iteration but in the case of a 2-element skipblock, it is the same as the 2nd erased element.</li>
 </ul>
 
 <p>++ iteration becomes:</p>
 <ol>
-<li>Increment both the current element pointer and bitfield index.</li>
+<li>Increment both the current element pointer and bitset index.</li>
 <li>Check to see if we are now beyond the end of the element block. If so, go to step 3. If not, go to step 4.</li>
-<li>Change element pointer to the start of the next element block, bitfield pointer to the next block's bitfield, and set bitfield index to 0.</li>
-<li>Read bitfield[index]. If it is 0, ++ is finished.</li>
-<li>If it is 1, read bitfield[index + 1] - if this is 0 (or beyond the end of the bitfield), this indicates a 1-element skipblock, so increment both the element pointer and bitfield index, and go to step 7.</li>
-<li>If bitfield[index + 1] is 1, dereference (element pointer + 1) to find the jump-counting value, and add this value to the element pointer and the bitfield index.</li>
+<li>Change element pointer to the start of the next element block, bitset pointer to the next block's bitset, and set bitset index to 0.</li>
+<li>Read bitset[index]. If it is 0, ++ is finished.</li>
+<li>If it is 1, read bitset[index + 1] - if this is 0 (or beyond the end of the bitset), this indicates a 1-element skipblock, so increment both the element pointer and bitset index, and go to step 7.</li>
+<li>If bitset[index + 1] is 1, dereference (element pointer + 1) to find the jump-counting value, and add this value to the element pointer and the bitset index.</li>
 <li>If we have already gone forward one block in step 3, ++ is finished. Otherwise check to see if we are now beyond the end of the element block. If so go to step 3. Otherwise ++ operation is finished.</li>
 </ol>
 
 <p>-- iteration becomes:</p>
 <ol>
-<li>Decrement both the current element pointer and bitfield index.</li>
+<li>Decrement both the current element pointer and bitset index.</li>
 <li>Check to see if we are now beyond the beginning of the element block. If so, go to step 3. If no, go to step 4.</li>
-<li>Change element pointer to the back element of the previous element block, bitfield pointer to the previous block's bitfield, and set bitfield index to the capacity of that element block - 1.</li>
-<li>Read bitfield[index]. If it is 0, -- is finished.</li>
-<li>If it is 1, read bitfield[index - 1] - if this is 0 (or beyond the beginning of the bitfield), decrement both the element pointer and bitfield index and go to step 7.</li>
-<li>If bitfield[index - 1] is 1, dereference the element pointer to find the jump-counting value, and subtract this value from the element pointer and the bitfield index.</li>
+<li>Change element pointer to the back element of the previous element block, bitset pointer to the previous block's bitset, and set bitset index to the capacity of that element block - 1.</li>
+<li>Read bitset[index]. If it is 0, -- is finished.</li>
+<li>If it is 1, read bitset[index - 1] - if this is 0 (or beyond the beginning of the bitset), decrement both the element pointer and bitset index and go to step 7.</li>
+<li>If bitset[index - 1] is 1, dereference the element pointer to find the jump-counting value, and subtract this value from the element pointer and the bitset index.</li>
 <li>If we have already gone back one block in step 3, -- is finished. Otherwise check to see if we are now beyond the beginning of the element block. If so go to step 3. If not -- operation is finished.</li>
 </ol>
 
@@ -3484,16 +3484,14 @@ metadata memory usage by two pointers. Alternative methods include:</p>
 <p>In the reference implementation we do not accommodate 1-byte types without artificially widening the storage the type uses to be sizeof(skipfield_type) * 2 ie. 2 bytes. This is in order to accomodate the doubly-linked free list of skipblocks, which is expressed in pairs of prev/next indexes
 written to the erased element's memory location. Those indexes have to be able
 to address the whole of the specific element block, which means they have to be
-the same size as skipfield_type.</p>
-
-<p>If an implementation wished to create an overload for 1-byte types such that there was no artificial widening of the element storage and resultant
+the same size as skipfield_type. If an implementation wished to create an overload for 1-byte types such that there was no artificial widening of the element storage and resultant
 wasted memory, there are 7 valid approaches I can see. However, the simplest and lowest memory cost approach turns out to also be potentially the fastest, so I will only list that approach here. See revision 26 of this paper for the previous (inferior) methods.</p>
 
-<p>Essentially the idea is this: utilize 255 or 256-element blocks, remove the free list from the structure (but retain the intrusive singly-linked list of blocks with erasures in them), create a bitfield for the 256 elements consisting of <code>256 / (sizeof(std::size_t) * 8)</code> std::size_t unsigned integers (ie. 4 for 64-bit platforms, 8 for 32-bit, etc). Store the jump-counting data in the erased element memory, iterating by using the bitfield to determine whether an element is erased and adding the jump-counting value to the current location, if so (add 1 to the jump-counting value if using 256-element blocks so that a jump from first element to end of block is possible). If using 255-element blocks we can make this branch-free via the instructions in the <a href="#bit_plus_jc">bitfield + jump-counting simple variant</a> section.</p>
+<p>Essentially the idea is this: utilize 255 or 256-element blocks, remove the free list from the structure (but retain the intrusive singly-linked list of blocks with erasures in them), create a bitset for the 256 elements consisting of <code>256 / (sizeof(std::size_t) * 8)</code> std::size_t unsigned integers (ie. 4 for 64-bit platforms, 8 for 32-bit, etc). Store the jump-counting data in the erased element memory, iterating by using the bitset to determine whether an element is erased and adding the jump-counting value to the current location, if so (add 1 to the jump-counting value if using 256-element blocks so that a jump from first element to end of block is possible). If using 255-element blocks we can make this branch-free via the instructions in the <a href="#bit_plus_jc">bitset + jump-counting simple variant</a> section.</p>
 
-<p>When erasing, it's a simple matter of setting a bitfield index to 1, and updating any jump-counting values for adjacent skipblocks in the erased element memory space. When inserting into a given block, one does the following: check each std::size_t to see if it's non-zero. The first non-zero std::size_t found is the location of the first erasure in that element block. Use std::countr_one (typically uses CPU intrinsics) to find the sub-index of the first 1 in the std::size_t, and use that with size_t's index + the subindex of the 1 to determine the index of the insertion position for the new element. Then se can set the 1 to 0 and update the jump-counting value for any adjacent skipblock. Since we are finding the first 1 from the right, any potential skipblock will be on the left, meaning we only have to add the jump-counting value in the erased element's memory space to the insertion point and subtract 1, to find the end node of the skipblock.</p>
+<p>When erasing, it's a simple matter of setting a bitset index to 1, and updating any jump-counting values for adjacent skipblocks in the erased element memory space. When inserting into a given block, one does the following: check each std::size_t to see if it's non-zero. The first non-zero std::size_t found is the location of the first erasure in that element block. Use std::countr_one (typically uses CPU intrinsics) to find the sub-index of the first 1 in the std::size_t, and use that with the size_t's index + the subindex of the 1 to determine the index into the element memory block, of the insertion position for the new element. Then we set the 1 to 0 in the bitset and update the jump-counting value for any adjacent skipblock. Since we are finding the first 1 starting from the least-significant-bit, any potential skipblock will be on the right of the erased element location, meaning we only have to add the jump-counting value in the erased element's memory space to the insertion point and subtract 1, to find the end node of that skipblock.</p>
 
-<p>Since this method only involves checking 4 (or 8) unsigned ints (this operation could use SIMD) and avoids allocating any additional memory to store free list node values, it is simultaneously the simplest, most effective and potentially the fastest option. The addition memory cost per-element is only 1 bit. While it could potentially be used for larger types as well, ideally with most of those we would like to be storing more elements per-block for cache locality/performance reasons. While 128 64-bit unsigned ints are enough to create a bitfield for 8192 elements, and it is possible that a given system would perform okay with scanning 128 64-bit ints that are already in the cache, at that point, we get closer to O(n) territory for inserts to erased locations.</p>
+<p>Because this method only involves checking 4 (or 8) unsigned ints and avoids allocating any additional memory to store free list node values, it is simultaneously the simplest, most effective and potentially the fastest option. The addition memory cost per-element is only 1 bit. While the method could potentially be used for larger types as well, ideally with most of those we would like to be storing more elements than 256 per-block for cache locality/performance reasons. And while 128 64-bit unsigned ints are enough to create a bitset for 8192 elements, and it is possible that a given system would perform okay with scanning 128 64-bit ints that are already in the cache, at that point, we are starting to get closer to O(n) territory for inserts to erased locations.</p>
 
 
 <h4><a id="vector_implementations_info"></a>An implementation guide using the
