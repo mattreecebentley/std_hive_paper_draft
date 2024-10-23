@@ -193,7 +193,7 @@
 <body>
 Audience: LEWG, SG14, WG21<br>
 Document number: D0447R27<br>
-Date: 2024-10-18<br>
+Date: 2024-10-24<br>
 Project: Introduction of std::hive to the standard library<br>
 Reply-to: Matthew Bentley &lt;mattreecebentley@gmail.com&gt;<br>
 
@@ -229,7 +229,7 @@ Reply-to: Matthew Bentley &lt;mattreecebentley@gmail.com&gt;<br>
 
 <h2><a id="revisions"></a>Revision history</h2>
 <ul>
-<li>R27: Correction/optimisation to bitfield+skipfield approach to element skipping. Updated tab:containers.summary and sequence.reqmts to match current draft C++ standard. Added [diff] and [library] sections to tech spec. Other nitpicks from first LWG meeting processed. Correction to possessive usage of 'its'. Placeholder numbers in tech spec removed. "may be the back of the container when no erasures have occurred, or " removed in synopsis. Added move assignment definition as it conditionally transfers current-limits from source to destination so is not covered by blanket wording, and copy assignment definition as it does not transfer current-limits. Added comment sections to synopsis. Added note to overview re: hard limits being constrained by allocator_traits&lt;Alloc&gt;::max_size().</li>
+<li>R27: Correction/optimisation to bitfield+skipfield approach to element skipping. Updated tab:containers.summary and sequence.reqmts to match current draft C++ standard. Added [diff] and [library] sections to tech spec. Other nitpicks from first LWG meeting processed. Correction to possessive usage of 'its'. Placeholder numbers in tech spec removed. "may be the back of the container when no erasures have occurred, or " removed in synopsis. Added move assignment definition as it conditionally transfers current-limits from source to destination so is not covered by blanket wording, and copy assignment definition as it does not transfer current-limits. Added comment sections to synopsis. Added note to overview re: hard limits being constrained by allocator_traits&lt;Alloc&gt;::max_size(). Update to appendix info for supporting small types, given that I found a better/cheaper alternative.</li>
 	<li>R26: Tech spec changes: kona final meeting changes applied: is_active()
 		removed. Precondition added to get_iterator, Effects 'return value of end()
 		when pointer is not in <code>*this</code>' clause is removed. Heading corrections. Formatting corrections.<br>
@@ -3486,104 +3486,14 @@ written to the erased element's memory location. Those indexes have to be able
 to address the whole of the specific element block, which means they have to be
 the same size as skipfield_type.</p>
 
-<p>If an implementation wished to create an overload for 1-byte types such that there was no artificial widening of the element storage and the resultant
-wasted memory, there are 6 valid approaches I can see.</p>
-<ol>
-	<li><h6>15-element blocks + 4-bit skipfield</h6>
-		<p>In this approach we reduce the skipfield bit-depth to 4-bits which in
-		turn reduces the capacities of element blocks to 16 elements. We can do
-		this via a <a href="https://en.cppreference.com/w/cpp/language/bit_field">bit-field</a>. We then continue business-as-usual and store our free list
-		node data in the erased element memory space. Blocks are 15-elements wide rather than 16 elements as we need to reserve the value of numeric_limits&lt;skipfield_type&gt;::max() <a href="#alt_erased_recording">as described above</a>.</p>
- </li>
-	<li><h6>15-element blocks + 1-bit skipfield</h6>
-		<p>Here we take the <a href="#bit_plus_jc_complex">bitfield + jump-counting skipfield (complex variant)</a> approach. Again, since our block size is 15 elements, jump-counting data can be stored using 4-bit integers. So the free list's prev and next indexes can be stored within the memory space of a single 1-byte erased element, while the jump-counting data is stored in the memory space of both the second and last erased elements in the skipblock.</p>
- </li>
-	<li><h6>255-elements-max blocks + 8-bit nextfield + 1-bit bitfield</h6>
-		<p>Here, instead of artificially widening type storage so that we can store 2 bytes of free list data in it, we create a secondary 'next' field (1-byte array) to store the 'next' index of our free list, while the 'prev' index is stored in the erased element's memory space. We then follow the <a href="#bit_plus_jc_complex">bitfield + jump-counting skipfield (complex variant)</a> approach, storing 8-bit jump-counting data in the memory space of both the second and last erased elements in the skipblock.</p>
- </li>
-	<li><h6>127-elements-max blocks + 7-bit nextfield combined with 1-bit bitfield</h6>
-		<p>Same as the approach above, but instead of having a separate nextfield, we reduce it to 7 bits and combine it with the bitfield to make a singular 8-bit array. 7 bits reduces the max capacity of the element blocks.</p>
- </li>
-	<li><h6>255-elements-max blocks + high-complexity jump-counting skipfield
-		+ 8-bit skipfield + singly-linked free list of erased elements (instead of
-		skipblocks) (<i>Requires tech spec change</i>)</h6>
-		<p>Here we substitute the low-complexity jump-counting skipfield for the
-		high-complexity variant, which is at worst O(n) in the number of skipfield
-		nodes in a given block for insertion and erasure, so would require widening of their time complexity. However, our block size is at most 255
-		elements (with 255 corresponding skipfield nodes) which limits the number of
-		operations. The high-complexity pattern allows us to have a singly-linked free list of erased elements instead of
-		skipblocks for the <a href="#singly_linked_free_list">reasons described earlier</a>. So we
-		can store our 8-bit 'next' value in the erased-element memory space without
-		having to widen the type bitdepth.</p>
- </li>
-	<li><h6>15-element blocks + high-complexity jump-counting skipfield + 1-bit
-		skipfield + singly-linked free list of erased elements (instead of skipblocks)</h6>
-		<p>Here we take a <a href="#bit_plus_jc">bitfield + jump-counting skipfield (simple variant)</a> approach and use it with a 4-bit high-complexity
-		jump-counting skipfield. We can store both the jump-counting data + the free list 'next' value in the erased element memory space (since both
-		are 4-bits). Since the block size is fixed at 15 elements, the high-complexity jump-counting approach is effectively O(1).</p>
- </li>
-</ol>
+<p>If an implementation wished to create an overload for 1-byte types such that there was no artificial widening of the element storage and resultant
+wasted memory, there are 7 valid approaches I can see. However, the simplest and lowest memory cost approach turns out to also be potentially the fastest, so I will only list that approach here. See revision 26 of this paper for the previous (inferior) methods.</p>
 
-<p>However if we look at the memory cost of each of these approaches, only two are adequate. Assuming we take a 'vector-of-pointers' approach to implementation
-+ a jump-counting skipfield of blocks-with-erasures (as described in the
-summary at the start of this appendix) + doing a few other things like
-allocating the element block and skipfield block in one allocation, and using
-the offset in capacity from the start of the element block to find the
-skipfield block (instead of storing a pointer to the skipfield block), we can
-reduce the per-block metadata down to around 40 bytes. Taking each of the
-approaches listed above as well as the reference implementation's approach, for
-253 elements we would end up with the per-element memory cost being (not including unused skipfield/element block memory space):</p>
-<ol>
-	<li><h6>15-element blocks + low-complexity jump-counting skipfield + 4-bit
-		skipfield + doubly-linked free list of skipblocks</h6>
-		<p>Metadata cost: 17 * 40 bytes<br>
-		Skipfield cost: 253 * 4 bits (.5 bytes)<br>
-		<i>Additional memory cost per element:</i> 3.19 bytes.</p>
- </li>
-	<li><h6>15-element blocks + low-complexity jump-counting skipfield + 1-bit
-		skipfield + doubly-linked free list of skipblocks</h6>
-		<p>Metadata cost: 17 * 40 bytes<br>
-		Skipfield cost: 253 * 1 bits (.125 bytes)<br>
-		<i>Additional memory cost per element:</i> 2.81 bytes.</p>
- </li>
-	<li><h6>Maximum 255-element blocks low-complexity jump-counting skipfield + 8-bit nextfield + 1-bit
-		skipfield + doubly-linked free list of skipblocks</h6>
-		<p>Metadata cost: 1 * 40 bytes<br>
-		Nextfield cost: 253 * 1 byte<br>
-		Skipfield cost: 253 * 1 bits (.125 bytes)<br>
-		<i>Additional memory cost per element:</i> 1.28 bytes.</p>
- </li>
- <li><h6>Maximum 127-elements blocks + 7-bit low-complexity jump-counting skipfield + nextfield combined with 1-bit bitfield + doubly-linked free list of skipblocks</h6>
-		<p>Metadata cost: 2 * 40 bytes<br>
-		Combined skipfield/nextfield cost: 253 * 1 bytes<br>
-		<i>Additional memory cost per element:</i> 1.32 bytes.</p>
- </li>
-	 <li><h6>Maximum 255-element blocks + high-complexity jump-counting skipfield
-		+ 8-bit skipfield + singly-linked free list of erased elements</h6>
-		<p>Metadata cost: 1 * 40 bytes<br>
-		Skipfield cost: 253 * 1 bytes<br>
-		<i>Additional memory cost per element:</i> 1.16 bytes.</p>
- </li>
-	<li><h6>15-element blocks + high-complexity jump-counting skipfield + 1-bit
-		skipfield + singly-linked free list of erased elements</h6>
-		<p>Metadata cost: 17 * 40 bytes<br>
-		Skipfield cost: 253 * 1 bit (.125 bytes)<br>
-		<i>Additional memory cost per element:</i> 2.97 bytes.</p>
- </li>
- <li><h6>(reference implementation, ie. artificially widen the type storage to 16-bits) Maximum
-		255-element blocks + low-complexity jump-counting skipfield + 8-bit
-		skipfield + doubly-linked free list of skipblocks</h6>
-		<p>Metadata cost: 1 * 40 bytes<br>
-		Widening cost: 253 * 1 bytes<br>
-		Skipfield cost: 253 * 1 bytes<br>
-		<i>Additional memory cost per element:</i> 2.16 bytes.</p>
- </li>
-</ol>
+<p>Essentially the idea is this: utilize 255 or 256-element blocks, remove the free list from the structure (but retain the intrusive singly-linked list of blocks with erasures in them), create a bitfield for the 256 elements consisting of <code>256 / (sizeof(std::size_t) * 8)</code> std::size_t unsigned integers (ie. 4 for 64-bit platforms, 8 for 32-bit, etc). Store the jump-counting data in the erased element memory, iterating by using the bitfield to determine whether an element is erased and adding the jump-counting value to the current location, if so (add 1 to the jump-counting value if using 256-element blocks so that a jump from first element to end of block is possible). If using 255-element blocks we can make this branch-free via the instructions in the <a href="#bit_plus_jc">bitfield + jump-counting simple variant</a> section.</p>
 
-<p>Clearly the third, fourth and fifth approaches are the only viable ones, if memory waste is a
-concern. They also allow allocating larger numbers of elements contiguously
-and reduce the number of allocations/deallocations, which improves
-insert/erase/iteration performance compared to other non-reference approaches. Since only the third and fourth don't require changing the API, they would be the better approaches, between those two the third has better cache locality due to larger element blocks, and also less memory waste so that's the preferred one.</p>
+<p>When erasing, it's a simple matter of setting a bitfield index to 1, and updating any jump-counting values for adjacent skipblocks in the erased element memory space. When inserting into a given block, one does the following: check each std::size_t to see if it's non-zero. The first non-zero std::size_t found is the location of the first erasure in that element block. Use std::countr_one (typically uses CPU intrinsics) to find the sub-index of the first 1 in the std::size_t, and use that with size_t's index + the subindex of the 1 to determine the index of the insertion position for the new element. Then se can set the 1 to 0 and update the jump-counting value for any adjacent skipblock. Since we are finding the first 1 from the right, any potential skipblock will be on the left, meaning we only have to add the jump-counting value in the erased element's memory space to the insertion point and subtract 1, to find the end node of the skipblock.</p>
+
+<p>Since this method only involves checking 4 (or 8) unsigned ints (this operation could use SIMD) and avoids allocating any additional memory to store free list node values, it is simultaneously the simplest, most effective and potentially the fastest option. The addition memory cost per-element is only 1 bit. While it could potentially be used for larger types as well, ideally with most of those we would like to be storing more elements per-block for cache locality/performance reasons. While 128 64-bit unsigned ints are enough to create a bitfield for 8192 elements, and it is possible that a given system would perform okay with scanning 128 64-bit ints that are already in the cache, at that point, we get closer to O(n) territory for inserts to erased locations.</p>
 
 
 <h4><a id="vector_implementations_info"></a>An implementation guide using the
