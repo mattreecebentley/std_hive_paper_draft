@@ -193,7 +193,7 @@
 <body>
 Audience: LEWG, SG14, WG21<br>
 Document number: D0447R27<br>
-Date: 2024-10-24<br>
+Date: 2024-10-27<br>
 Project: Introduction of std::hive to the standard library<br>
 Reply-to: Matthew Bentley &lt;mattreecebentley@gmail.com&gt;<br>
 
@@ -229,7 +229,7 @@ Reply-to: Matthew Bentley &lt;mattreecebentley@gmail.com&gt;<br>
 
 <h2><a id="revisions"></a>Revision history</h2>
 <ul>
-<li>R27: Correction/optimisation to bitset+skipfield approach to element skipping. Updated tab:containers.summary and sequence.reqmts to match current draft C++ standard. Added [diff] and [library] sections to tech spec. Other nitpicks from first LWG meeting processed. Correction to possessive usage of 'its'. Placeholder numbers in tech spec removed. "may be the back of the container when no erasures have occurred, or " removed in synopsis. Added move assignment definition as it conditionally transfers current-limits from source to destination so is not covered by blanket wording, and copy assignment definition as it does not transfer current-limits. Added comment sections to synopsis. Added note to overview re: hard limits being constrained by allocator_traits&lt;Alloc&gt;::max_size(). Update to appendix info for supporting small types, given that I found a better/cheaper alternative. Changed all references to 'bitfield' to 'bitset' to avoid ambiguity in the context of C++.</li>
+<li>R27: Correction/optimisation to bitset+skipfield approach to element skipping. Updated tab:containers.summary and sequence.reqmts to match current draft C++ standard. Added [diff] and [library] sections to tech spec. Other nitpicks from first LWG meeting processed. Correction to possessive usage of 'its'. Placeholder numbers in tech spec removed. "may be the back of the container when no erasures have occurred, or " removed in synopsis. Added move assignment definition as it conditionally transfers current-limits from source to destination so is not covered by blanket wording, and copy assignment definition as it does not transfer current-limits. Added comment sections to synopsis. Added note to overview re: hard limits being constrained by allocator_traits&lt;Alloc&gt;::max_size(). Update to appendix info for supporting small types, given that I found a better/cheaper alternative. Changed all references to 'bitfield' to 'bitset' to avoid ambiguity in the context of C++. Removed references to non-literal types being a problem for constexpr in the FAQ, since Ville's paper P2242 removes that hurdle. Further editing to hive.overview.3.</li>
 	<li>R26: Tech spec changes: kona final meeting changes applied: is_active()
 		removed. Precondition added to get_iterator, Effects 'return value of end()
 		when pointer is not in <code>*this</code>' clause is removed. Heading corrections. Formatting corrections.<br>
@@ -1311,10 +1311,9 @@ namespace std {
 		blocks can be allocated by the user [Example: by <code>reserve</code> - end
 		example] for future use during insertions, at which point they become
 		active blocks.</li>
-	<li>Erasures use unspecified techniques to mark the locations of erased elements as skippable, as opposed to relocating subsequent elements during erasure. These elements are subsequently skipped
-		during iteration. The same, or different unspecified techniques may be used
-		to record the locations of erased elements, such that those locations may
-		be reused later during insertions. All of these techniques have constant
+	<li>Erasures use unspecified techniques to identify the memory locations of erased elements, as opposed to relocating subsequent elements during erasure. These locations are subsequently skipped
+		during iteration. The same, or different unspecified techniques may be utilized
+		to reuse those locations later, during insertions. All of these techniques have constant
 		time complexity.</li>
 	<li>Active block capacities have an implementation-defined growth factor
 		(which need not be integral), for example a new active block's capacity
@@ -2621,8 +2620,7 @@ between hive and colony as of the time of writing follow:</p>
 		compiler support was not good but this has improved steadily over time. I
 		wasn't happy with having to label each and every function as constexpr, but there seem to
 		be movements toward labeling classes as a whole as constexpr, so if that
-		comes through it will remove that problem. Having said that, there are a few
-		of things to consider when designed a constexpr hive. One is that in the
+		comes through it will remove that problem. Having said that, one thing to consider is that in the
 		reference implementation there is extensive use of reinterpret_cast'ing
 		pointers, mainly for two areas:</p>
 		<ol>
@@ -2637,14 +2635,8 @@ between hive and colony as of the time of writing follow:</p>
 		and skipfield blocks would have to be allocated separately. So it is
 		<i>possible</i>, though it could be hard work, and may decrease runtime
 		performance.</p>
-		<p>Constexpr containers do not allow
-		non-literal member variables, and in the reference implementation the begin()
-		and end() iterators are stored as member variables and also function as records of
-		the first and last active blocks in the sequence. This much can be worked around
-		by breaking the iterators apart into their individual pointers, then
-		reconstructing them on the fly whenever begin()/end()/etc are called. This is an implementation burden though.</p>
 		<p>For the moment I am happier for std::array and std::vector to be the
-		"canaries in the coalmine" here.</p>
+		<a href="https://en.wikipedia.org/wiki/Sentinel_species">canaries in the coalmine</a> here.</p>
  </li>
 	<li><h4>Licensing for the reference implementation (zLib) - is this
 		compatible with libstdc++/libc++/MS-STL usage?</h4>
