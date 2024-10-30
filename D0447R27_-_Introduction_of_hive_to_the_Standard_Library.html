@@ -193,7 +193,7 @@
 <body>
 Audience: LEWG, SG14, WG21<br>
 Document number: D0447R27<br>
-Date: 2024-10-27<br>
+Date: 2024-10-30<br>
 Project: Introduction of std::hive to the standard library<br>
 Reply-to: Matthew Bentley &lt;mattreecebentley@gmail.com&gt;<br>
 
@@ -229,7 +229,7 @@ Reply-to: Matthew Bentley &lt;mattreecebentley@gmail.com&gt;<br>
 
 <h2><a id="revisions"></a>Revision history</h2>
 <ul>
-<li>R27: Correction/optimisation to bitset+skipfield approach to element skipping. Updated tab:containers.summary and sequence.reqmts to match current draft C++ standard. Added [diff] and [library] sections to tech spec. Other nitpicks from first LWG meeting processed. Correction to possessive usage of 'its'. Placeholder numbers in tech spec removed. "may be the back of the container when no erasures have occurred, or " removed in synopsis. Added move assignment definition as it conditionally transfers current-limits from source to destination so is not covered by blanket wording, and copy assignment definition as it does not transfer current-limits. Added comment sections to synopsis. Added note to overview re: hard limits being constrained by allocator_traits&lt;Alloc&gt;::max_size(). Update to appendix info for supporting small types, given that I found a better/cheaper alternative. Changed all references to 'bitfield' to 'bitset' to avoid ambiguity in the context of C++. Removed references to non-literal types being a problem for constexpr in the FAQ, since Ville's paper P2242 removes that hurdle. Further editing to hive.overview.3.</li>
+<li>R27: Correction/optimisation to bitset+skipfield approach to element skipping. Updated tab:containers.summary and sequence.reqmts to match current draft C++ standard. Added [diff] and [library] sections to tech spec. Other nitpicks from first LWG meeting processed. Correction to possessive usage of 'its'. Placeholder numbers in tech spec removed. "may be the back of the container when no erasures have occurred, or " removed in synopsis. Added move assignment definition as it conditionally transfers current-limits from source to destination so is not covered by blanket wording, and copy assignment definition as it does not transfer current-limits. Added comment sections to synopsis. Added note to overview re: hard limits being constrained by allocator_traits&lt;Alloc&gt;::max_size(). Update to appendix info for supporting small types, given that I found a better/cheaper alternative. Changed all references to 'bitfield' to 'bitset' to avoid ambiguity in the context of C++. Removed references to non-literal types being a problem for constexpr in the FAQ, since Ville's paper P2242 removes that hurdle. Further editing to hive.overview.3. Update Appendix B.</li>
 	<li>R26: Tech spec changes: kona final meeting changes applied: is_active()
 		removed. Precondition added to get_iterator, Effects 'return value of end()
 		when pointer is not in <code>*this</code>' clause is removed. Heading corrections. Formatting corrections.<br>
@@ -2050,9 +2050,8 @@ between hive and colony as of the time of writing follow:</p>
 		std::distance overload doesn't support negative distances, the two
 		iterators must be swapped prior to distance call if first is &gt; last.</li>
 	<li>The following public functions are not present: is_active,
-		default_min_block_capacity, default_max_block_capacity,
-		default_block_capacity_limits, block_metadata_memory,
-		block_allocation_amount, max_elements_per_allocation.</li>
+		block_capacity_default_min(), block_capacity_default_max(),
+		block_metadata_memory, block_allocation_amount, max_elements_per_allocation.</li>
 </ul>
 
 <p>Other differences may appear over time.</p>
