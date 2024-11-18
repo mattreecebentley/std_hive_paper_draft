@@ -193,7 +193,7 @@
 <body>
 Audience: LEWG, SG14, WG21<br>
 Document number: D0447R27<br>
-Date: 2024-10-30<br>
+Date: 2024-11-15<br>
 Project: Introduction of std::hive to the standard library<br>
 Reply-to: Matthew Bentley &lt;mattreecebentley@gmail.com&gt;<br>
 
@@ -229,7 +229,7 @@ Reply-to: Matthew Bentley &lt;mattreecebentley@gmail.com&gt;<br>
 
 <h2><a id="revisions"></a>Revision history</h2>
 <ul>
-<li>R27: Correction/optimisation to bitset+skipfield approach to element skipping. Updated tab:containers.summary and sequence.reqmts to match current draft C++ standard. Added [diff] and [library] sections to tech spec. Other nitpicks from first LWG meeting processed. Correction to possessive usage of 'its'. Placeholder numbers in tech spec removed. "may be the back of the container when no erasures have occurred, or " removed in synopsis. Added move assignment definition as it conditionally transfers current-limits from source to destination so is not covered by blanket wording, and copy assignment definition as it does not transfer current-limits. Added comment sections to synopsis. Added note to overview re: hard limits being constrained by allocator_traits&lt;Alloc&gt;::max_size(). Update to appendix info for supporting small types, given that I found a better/cheaper alternative. Changed all references to 'bitfield' to 'bitset' to avoid ambiguity in the context of C++. Removed references to non-literal types being a problem for constexpr in the FAQ, since Ville's paper P2242 removes that hurdle. Further editing to hive.overview.3. Update Appendix B.</li>
+<li>R27: Correction/optimisation to bitset+skipfield approach to element skipping. Updated tab:containers.summary and sequence.reqmts to match current draft C++ standard. Added [diff] and [library] sections to tech spec. Other nitpicks from first LWG meeting processed. Correction to possessive usage of 'its'. Placeholder numbers in tech spec removed. "may be the back of the container when no erasures have occurred, or " removed in synopsis. Added move assignment definition as it conditionally transfers current-limits from source to destination so is not covered by blanket wording, and copy assignment definition as it does not transfer current-limits. Added comment sections to synopsis. Added note to overview re: hard limits being constrained by allocator_traits&lt;Alloc&gt;::max_size(). Update to appendix info for supporting small types, given that I found a better/cheaper alternative. Changed all references to 'bitfield' to 'bitset' to avoid ambiguity in the context of C++. Removed references to non-literal types being a problem for constexpr in the FAQ, since Ville's paper P2242 removes that hurdle. Further editing to hive.overview.3. Update Appendix B. Added a FAQ entry on why we don't support why a fully-functional insert(T value, iterator position).</li>
 	<li>R26: Tech spec changes: kona final meeting changes applied: is_active()
 		removed. Precondition added to get_iterator, Effects 'return value of end()
 		when pointer is not in <code>*this</code>' clause is removed. Heading corrections. Formatting corrections.<br>
@@ -934,6 +934,15 @@ every element block transition, 2 reads of the skipfield are necessary instead o
 				different from its hard limits.</li>
 			<li>A user must have a mechanism for determining what user-defined limits
 				they can supply before supplying them to a constructor, to avoid triggering an exception. This is most important when working with projects on multiple platforms.</li>
+		</ol>
+ </li>
+	<li><code style="font-weight: bold;">static constexpr std::hive_limits block_capacity_default_limits() noexcept</code><br>
+		<i>(O(1))</i>
+		<p>Likewise, this returns the default limits for a given hive and type/allocator.</p>
+		<p>This is useful for 2 reasons:</p>
+		<ol type="a">
+			<li>Finding the defaults easily without interpreting source code (if they have access to source code).</li>
+			<li>Reshaping hives with user-defined block capaciity limits to match the defaults, such that they can be spliced into other hives which are constructed without user-defined limits.</li>
 		</ol>
  </li>
 	<li><code style="font-weight: bold;">void clear()</code><br>
@@ -2613,6 +2622,14 @@ between hive and colony as of the time of writing follow:</p>
 			<li>There are better containers for ordered insertion eg. deque/vector/plf::list.</li>
 		</ol>
  </li>
+	<li><h4>"Likewise, why not support a fully-functional insert(T value, iterator position)?"</h4>
+		<ol type="a">
+			<li>The same performance and usage issues identified above apply. Also, this would implicitly enable push_back via insert(value, hive.end()).</li>
+			<li>Given that a hive can only insert locally to <code>position</code> if there is an erased element memory location near it (or if <code>position</code> is close to <code>end()</code>),
+			there is no guarantee that the insertion will be anywhere near <code>position</code>. As such it's best not to provide the user with false promises.</li>
+			<li>Even in the case that there is an erased element memory location within the same block as <code>position</code>, blocks could be up to 65535 elements wide (possibly more on another implementation), making the position parameter more-or-less irrelevant. If one were to properly assess the nearest erased location from <code>position</code>, as opposed to just grabbing the first erased location in the block from the erased-elements free list, one would either have to scan the skipfield linearly in both directions from <code>position</code>, or do similar calculations using the free list - in either case an O(n) operation. And again, with no guarantee that the resultant location will be even remotely close to <code>position</code>.</li>
+		</ol>
+ </li>
 	<li><h4>"Why not constexpr?" (yet)</h4>
 		<p>At time of writing constexpr containers are still a new-ish thing and
 		some of the kinks of usage may yet have to be worked out. Early
@@ -3801,7 +3818,7 @@ block numbers, which as mentioned is wasteful. We could however remove the back 
 deque-of-pointers at that point, as the iterator could use the pointer to the
 vector to find the front and back of the deque, instead.</p>
 
-<p>That's all. This is probably not the only approach possible when not using
+<p>This is probably not the only approach possible when not using
 the reference implementation, but it certainly will work.</p>
 </body>
 </html>
