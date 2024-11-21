@@ -193,7 +193,7 @@
 <body>
 Audience: LEWG, SG14, WG21<br>
 Document number: D0447R27<br>
-Date: 2024-11-19<br>
+Date: 2024-11-21<br>
 Project: Introduction of std::hive to the standard library<br>
 Reply-to: Matthew Bentley &lt;mattreecebentley@gmail.com&gt;<br>
 
@@ -230,8 +230,8 @@ Reply-to: Matthew Bentley &lt;mattreecebentley@gmail.com&gt;<br>
 <h2><a id="revisions"></a>Revision history</h2>
 <ul>
 <li>R27: Correction/optimisation to bitset+skipfield approach to element skipping. Updated tab:containers.summary and sequence.reqmts to match current draft C++ standard. Added [diff] and [library] sections to tech spec. Other nitpicks from first LWG meeting processed. Correction to possessive usage of 'its'. Placeholder numbers in tech spec removed. "may be the back of the container when no erasures have occurred, or " removed in synopsis. Added move assignment definition as it conditionally transfers current-limits from source to destination so is not covered by blanket wording, and copy assignment definition as it does not transfer current-limits. Added comment sections to synopsis. Added note to overview re: hard limits being constrained by allocator_traits&lt;Alloc&gt;::max_size(). Update to appendix info for supporting small types, given that I found a better/cheaper alternative. Changed all references to 'bitfield' to 'bitset' to avoid ambiguity in the context of C++. Removed references to non-literal types being a problem for constexpr in the FAQ, since Ville's paper P2242 removes that hurdle. Further editing to hive.overview.3. Update Appendix B. Added a FAQ entry on why we don't support why a fully-functional insert(T value, iterator position).<br>
-LWG meeting 19-11-24 changes: added hint'ed insert overloads. Remove "If an exception is thrown other than by the move constructor of a non-Cpp17CopyInsertable T, both x and *this are left in a usable state." from move assignment. Remove throws paragraphs in move assignment, shrink_to_fit and reshape. Move reshape, block_capacity_hard_limits and block_capacity_default_limits to [hive.capacity]. Modification to exception info for shrink_to_fit based on removing support for copy-if-non-noexcept-move. Rebase reserve and sort 'Throws' wording around the more recent basic_string wording.
-
+LWG meeting 19-11-24 changes: added hint'ed insert overloads. Remove "If an exception is thrown other than by the move constructor of a non-Cpp17CopyInsertable T, both x and *this are left in a usable state." from move assignment. Remove throws paragraphs in move assignment, shrink_to_fit and reshape. Move reshape, block_capacity_hard_limits and block_capacity_default_limits to [hive.capacity]. Modification to exception info for shrink_to_fit based on removing support for copy-if-non-noexcept-move. Rebase reserve and sort 'Throws' wording around the more recent basic_string wording.<br>
+LWG meeting 20-11-24 changes: Updates to tech spec overview, removable of 5.5. Added definitions for copy constructors because blanket wording for copy constructors requires operator == on container. Nitpicks. Changes to move assignment, copy assignment, sort, reserve, unique, capacity and shrink_to_fit definitions. Remove sort allocation notes based on info that allocators are not intended for transitory storage in containers.
 </li>
 	<li>R26: Tech spec changes: kona final meeting changes applied: is_active()
 		removed. Precondition added to get_iterator, Effects 'return value of end()
@@ -1313,20 +1313,13 @@ namespace std {
 
 <h4>Overview [hive.overview]</h4>
 <ol>
-	 <li>A hive is a type of sequence container that supports constant-time insertion and erasure operations. Storage management is automatically handled, with elements organized into multiple blocks, referred to as <i>element blocks</i>. Insertion position is determined by the container.<br>
-[Note: When erasures have occurred the container may re-use existing erased element memory locations during insertion. -end note]
-	<li>Element blocks which are traversed when iterating over the sequence
-		are referred to as <i>active blocks</i>, those which are not are referred
-		to as <i>reserved blocks</i>. Active blocks which become empty of sequence
-		elements [Example: via use of <code>erase</code> or <code>clear</code> -
-		end example] are either deallocated or become reserved blocks. Reserved
-		blocks can be allocated by the user [Example: by <code>reserve</code> - end
-		example] for future use during insertions, at which point they become
-		active blocks.</li>
-	<li>Erasures use unspecified techniques to identify the memory locations of erased elements, as opposed to relocating subsequent elements during erasure. These locations are subsequently skipped
-		during iteration. The same, or different unspecified techniques may be utilized
-		to reuse those locations later, during insertions. All of these techniques have constant
-		time complexity.</li>
+	 <li>A hive is a type of sequence container that provides constant-time insertion and erasure operations. Storage is automatically managed in multiple memory blocks, referred to as <i>element blocks</i>. Insertion position is determined by the container, and may re-use the memory locations of erased elements.</li>
+	<li>Element blocks which contain elements are referred to as <i>active blocks</i>, those which do not are referred
+		to as <i>reserved blocks</i>. Active blocks which become empty of elements 
+		are either deallocated or become reserved blocks. Reserved blocks become
+		active blocks when they are used to store elements. A user can create additional reserved blocks by calling <code>reserve</code>.</li>
+	<li>Erasures use unspecified techniques of constant time complexity to identify the memory locations of erased elements, which are subsequently skipped
+during iteration, as opposed to relocating subsequent elements during erasure.</li>
 	<li>Active block capacities have an implementation-defined growth factor
 		(which need not be integral), for example a new active block's capacity
 		could be equal to the summed capacities of the pre-existing active
@@ -1347,11 +1340,8 @@ namespace std {
 		<p style="text-indent: -25pt;">(5.4) &mdash; If user-specified limits are
 		not within hard limits, or if the specified minimum limit is greater than
 		the specified maximum limit, behavior is undefined.</p>
-		<p style="text-indent: -25pt;">(5.5) &mdash; After construction a hive's
-		limits can be changed by the user via <code>reshape</code>.</p>
-		<p style="text-indent: -25pt;">(5.6) &mdash; Limits are copied between
-		hives during copy construction, move construction, move assignment and <code>swap</code>. [ Note: Not copied during copy assignment. - end note ]</p>
-		<p style="text-indent: -25pt;">(5.7) &mdash; An element block is said to be
+		<p style="text-indent: -25pt;">(5.5) &mdash; Limits are not copied between hives during move assignment when the allocator is neither propagated nor always-equal, or during copy assignment. They are copied during move assignment when the allocator is either propagated or always-equal, as well as during copy construction, move construction and <code>swap</code>.</p>
+		<p style="text-indent: -25pt;">(5.6) &mdash; An element block is said to be
 		<i>within the bounds of</i> a pair of minimum/maximum limits when its
 		capacity is greater-or-equal-to the minimum limit and less-than-or-equal-to the maximum limit.</p>
  </li>
@@ -1364,7 +1354,7 @@ namespace std {
 		provided here only for operations on hive that are not described in that
 		table or for operations where there is additional semantic information.</li>
 	<li>Hive iterators meet the <i>Cpp17BidirectionalIterator</i> requirements but also
-		model <code>three_way_comparable_with</code>.</li>
+		model <code>three_way_comparable&lt;strong_ordering&gt;</code>.</li>
 </ol>
 
 <div style="background: #ffffff; overflow:auto; width:auto; border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;">
@@ -1481,12 +1471,11 @@ public:
   // [hive.operations] hive operations
   void splice(hive&amp; x);
   void splice(hive&amp;&amp; x);
-  size_type unique();
-  template&lt;class BinaryPredicate&gt;
-    size_type unique(BinaryPredicate binary_pred);
+  template&lt;BinaryPredicate = equal_to&lt;T&gt;&gt;
+    size_type unique(BinaryPredicate binary_pred = BinaryPredicate());</code></pre>
 
-  void sort();
-  template&lt;class Compare&gt; void sort(Compare comp);
+  template&lt;Compare = less&lt;T&gt;&gt;
+    void sort(Compare comp = Compare());</code></pre>
 
   iterator get_iterator(const_pointer p) noexcept;
   const_iterator get_iterator(const_pointer p) const noexcept;
@@ -1583,9 +1572,21 @@ template&lt;<i>container-compatible-range</i>&lt;T&gt; R&gt;
 
 
 <code style="font-weight:bold">
+  hive(const hive&amp; x);<br>
+  hive(const hive&amp;, const type_identity_t&lt;Allocator&gt;&amp;);</code>
+<ol start="15">
+	<li>Preconditions: <code>T</code> is <i>Cpp17CopyInsertable</i> into
+		<code>*this</code>.</li>
+	<li>Postconditions: <code>is_permutation(begin(), end(), x.begin(), x.end())</code> is true.</li>
+	<li>Effects: Constructs a <code>hive</code> object with the elements of <code>x</code>. If the second overload is called, uses the specified <code>Allocator</code>.</li>
+	<li>Complexity: Linear in <code>x.size()</code>.</li>
+</ol>
+
+
+<code style="font-weight:bold">
 	hive(initializer_list&lt;T&gt; il, const Allocator&amp; = Allocator());<br>
 	hive(initializer_list&lt;T&gt; il, hive_limits block_limits, const Allocator&amp; = Allocator());</code>
-<ol start="15">
+<ol start="19">
 	<li>Preconditions: <code>T</code> is <i>Cpp17CopyInsertable</i> into
 		<code>*this</code>.</li>
 	<li>Effects: Constructs a <code>hive</code> object with the elements of <code>il</code>, using the specified allocator. If the second overload is called, also initializes <code>current-limits</code> with <code>block_limits</code>.</li>
@@ -1595,9 +1596,9 @@ template&lt;<i>container-compatible-range</i>&lt;T&gt; R&gt;
 
 <code style="font-weight:bold">
   hive&amp; operator=(const hive&amp; x);</code>
-<ol start="18">
-  <li>Preconditions: <code>T</code> is <i>Cpp17CopyInsertable</i> into <code>*this</code>.</li>
-  <li>Effects: All elements in <code>*this</code> are destroyed. Subsequently, all elements in <code>x</code> are copied into <code>*this</code>.<br>
+<ol start="22">
+  <li>Preconditions: <code>T</code> is <i>Cpp17CopyInsertable</i> and <i>Cpp17CopyAssignable</i> into <code>*this</code>.</li>
+  <li>Effects: All elements in <code>*this</code> are either copy-assigned to, or destroyed. All elements in <code>x</code> are copied into <code>*this</code>.<br>
   [Note: <code>current-limits</code> is unchanged. - end note]</li>
   <li>Complexity: Linear in <code>size() + x.size()</code>.</li>
 </ol>
@@ -1606,11 +1607,11 @@ template&lt;<i>container-compatible-range</i>&lt;T&gt; R&gt;
 
 <code style="font-weight:bold">
 	hive&amp; operator=(hive&amp;&amp; x) noexcept(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || allocator_traits&lt;Allocator&gt;::is_always_equal::value);</code>
-<ol start="21">
-	<li>Effects: All elements in <code>*this</code> are destroyed.<br>
-	When <code>(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || allocator_traits&lt;Allocator&gt;::is_always_equal::value) == true</code>, <code>current-limits</code> is set to <code>x.current-limits</code> and all element blocks are moved from <code>x</code> into <code>*this</code>. Pointers and references to the elements of <code>x</code> now refer to those same elements but as members of <code>*this</code>. Iterators referring to the elements of <code>x</code> will continue to refer to their elements, but they now behave as iterators into <code>*this</code>, not into <code>x</code>.<br>
-	When <code>(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || allocator_traits&lt;Allocator&gt;::is_always_equal::value) == false</code>, all elements in <code>x</code> are moved into <code>*this</code> and all element blocks in <code>x</code> are destroyed. Iterators, pointers and references referring to the elements of <code>x</code> are invalidated.</li>
-	<li>Complexity: Linear in <code>size()</code>. If allocators are not equal or propogated from <code>x</code> into <code>*this</code>, also linear in <code>x.size()</code>.</li>
+<ol start="25">
+	<li>Effects: All elements in <code>*this</code> are either move-assigned to, or destroyed.<br>
+	When <code>(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || allocator_traits&lt;Allocator&gt;::is_always_equal::value)</code> is true, <code>current-limits</code> is set to <code>x.current-limits</code> and all element blocks are moved from <code>x</code> into <code>*this</code>. Pointers and references to the elements of <code>x</code> now refer to those same elements but as members of <code>*this</code>. Iterators referring to the elements of <code>x</code> will continue to refer to their elements, but they now behave as iterators into <code>*this</code>, not into <code>x</code>.<br>
+	When <code>(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || allocator_traits&lt;Allocator&gt;::is_always_equal::value)</code> is false, all elements in <code>x</code> are moved into <code>*this</code> and all element blocks in <code>x</code> are destroyed. Iterators, pointers and references referring to the elements of <code>x</code> are invalidated.</li>
+	<li>Complexity: Linear in <code>size()</code>. If allocators are not equal or propagated from <code>x</code> into <code>*this</code>, also linear in <code>x.size()</code>.</li>
 </ol>
 
 
@@ -1618,7 +1619,7 @@ template&lt;<i>container-compatible-range</i>&lt;T&gt; R&gt;
 <h4>Capacity [hive.capacity]</h4>
 <code style="font-weight: bold;">size_type capacity() const noexcept;</code>
 <ol>
-	<li>Returns: The total number of elements that the <code>hive</code> can hold
+	<li>Returns: The total number of elements that <code>*this</code> can hold
 		without requiring allocation of more element blocks.</li>
 	<li>Complexity: Constant.</li>
 </ol>
@@ -1626,19 +1627,19 @@ template&lt;<i>container-compatible-range</i>&lt;T&gt; R&gt;
 
 <code style="font-weight: bold;">void reserve(size_type n);</code>
 <ol start="3">
-	<li>Effects: A directive that informs a <code>hive</code> of a planned change
-		in size, so that it can manage the storage allocation accordingly. Does not
-		cause reallocation of elements. Iterators to elements in <code>*this</code>
+	<li>Effects: Iterators to elements in <code>*this</code>
 		remain valid. If <code>n &lt;= capacity()</code> there are no effects.</li>
+	<li>Postconditions: <code>capacity() &gt;= n</code> is <code>true</code>.</li>
 	<li>Complexity: It does not change the size of the sequence and takes at most
 		linear time in the number of reserved blocks allocated.</li>
-	<li>Throws: <code>length_error</code> if <code>n &gt; max_size()</code> or any exceptions thrown by <code>allocator_traits&lt;Allocator&gt;::allocate.</code></li>
-	<li>Postconditions: <code>capacity() &gt;= n</code> is <code>true</code>.</li>
+	<li>Throws: <code>length_error</code> if <code>n &gt; max_size()</code>, any exceptions thrown by <code>allocator_traits&lt;Allocator&gt;::allocate</code> or a rebound copy of <code>Allocator</code>.</li>
+	<li>Remarks: Informs a <code>hive</code> of a planned change in size, so that it can manage the storage allocation accordingly. Does not
+		cause reallocation of elements.</li>
 </ol>
 
 
 <code style="font-weight: bold;">void shrink_to_fit();</code>
-<ol start="7">
+<ol start="8">
 	<li>Preconditions: <code>T</code> is <i>Cpp17MoveInsertable</i> into
 		<code>*this</code>.</li>
 	<li>Effects: <code>shrink_to_fit</code> is a non-binding request to reduce
@@ -1648,21 +1649,17 @@ template&lt;<i>container-compatible-range</i>&lt;T&gt; R&gt;
 		It does not increase <code>capacity()</code>, but may reduce
 		<code>capacity()</code>. It may reallocate elements. If
 		<code>capacity()</code> is already equal to <code>size()</code> there are
-		no effects. If an exception is thrown by during allocation of a new element block, 
+		no effects. If an exception is thrown during allocation of a new element block, 
 		<code>capacity()</code> may be reduced and reallocation may occur. Otherwise if an exception is thrown the effects are unspecified.</li>
 	<li>Complexity: If reallocation happens, linear in the size of the
 	sequence.</li>
-	<li>Remarks: If reallocation occurs, the order of the elements in
-		<code>*this</code> may change. Reallocation invalidates all the references,
-		pointers, and iterators referring to the elements in the sequence as well
-		as the past-the-end iterator.<br>
-		[Note: If no reallocation happens, they remain valid. - end note]</li>
+	<li>Remarks: If reallocation occurs, the order of the elements in <code>*this</code> may change and all the references, pointers, and iterators referring to the elements in the sequence, as well as the past-the-end iterator, are invalidated.</li>
 </ol>
 
 
 <code style="font-weight: bold;">void trim_capacity() noexcept;<br>
 void trim_capacity(size_type n) noexcept; </code>
-<ol start="11">
+<ol start="12">
 	<li>Effects: For the first overload, all reserved blocks are deallocated, and
 		<code>capacity()</code> is reduced accordingly. For the second overload,
 		<code>capacity()</code> will be reduced to no less than <code>n</code>.
@@ -1674,14 +1671,14 @@ void trim_capacity(size_type n) noexcept; </code>
 
 
 <code style="font-weight: bold;">constexpr hive_limits block_capacity_limits() const noexcept;</code>
-<ol start="14">
+<ol start="15">
 	<li>Effects: Returns <code>current-limits</code>.</li>
 	<li>Complexity: Constant.</li>
 </ol>
 
 
 <code style="font-weight: bold;">static constexpr hive_limits block_capacity_default_limits() noexcept;</code>
-<ol start="16">
+<ol start="17">
 	<li>Returns: A <code>hive_limits</code> struct with the <code>min</code> and
 		<code>max</code> members set to the implementation's default limits.</li>
 	<li>Complexity: Constant.</li>
@@ -1689,7 +1686,7 @@ void trim_capacity(size_type n) noexcept; </code>
 
 
 <code style="font-weight: bold;">static constexpr hive_limits block_capacity_hard_limits() noexcept;</code>
-<ol start="18">
+<ol start="19">
 	<li>Returns: A <code>hive_limits</code> struct with the <code>min</code> and
 		<code>max</code> members set to the implementation's hard limits.</li>
 	<li>Complexity: Constant.</li>
@@ -1697,7 +1694,7 @@ void trim_capacity(size_type n) noexcept; </code>
 
 
 <code style="font-weight: bold;">void reshape(hive_limits block_limits);</code>
-<ol start="20">
+<ol start="21">
 	<li>Preconditions: <code>T</code> is <i>Cpp17MoveInsertable</i> into <code>*this</code>.
  </li>
 	<li>Effects: Assigns <code>block_limits</code> to
@@ -1804,12 +1801,11 @@ void splice(hive &amp;&amp;x);</code>
 		<code>x</code> and <code>*this</code>.</li>
 </ol>
 
-<pre><code style="font-weight:bold">size_type unique();
-template&lt;class BinaryPredicate&gt;
-  size_type unique(BinaryPredicate binary_pred);</code></pre>
+
+<pre><code style="font-weight:bold">
+template&lt;BinaryPredicate = equal_to&lt;T&gt;&gt;
+  size_type unique(BinaryPredicate binary_pred = BinaryPredicate());</code></pre>
 <ol start="7">
-	<li>Let <code>binary_pred</code> be <code>equal_to&lt; &gt;{}</code> for the
-		first overload.</li>
 	<li>Preconditions: <code>binary_pred</code> is an equivalence relation.</li>
 	<li>Effects: Erases all but the first element from every consecutive group of
 		equivalent elements. That is, for a nonempty <code>hive</code>, erases all
@@ -1825,20 +1821,17 @@ template&lt;class BinaryPredicate&gt;
 </ol>
 
 
-<pre><code style="font-weight:bold">void sort();
-template&lt;class Compare&gt;
-  void sort(Compare comp);</code></pre>
-<ol start="13">
+<pre><code style="font-weight:bold">
+template&lt;Compare = less&lt;T&gt;&gt;
+  void sort(Compare comp = Compare());</code></pre>
+<ol start="12">
 	<li>Preconditions: <code>T</code> is <i>Cpp17MoveInsertable</i> and
-		<i>Cpp17MoveAssignable</i> into <code>*this</code>. lvalues of type
+		<i>Cpp17MoveAssignable</i> into <code>hive</code>. lvalues of type
 		<code>T</code> are swappable.</li>
-	<li>Effects: Sorts the <code>hive</code> according to the <code>operator
-		&lt;</code> or the <code>comp</code> function object. If an exception is
+	<li>Effects: Sorts <code>*this</code> according to the <code>comp</code> function object. If an exception is
 		thrown, the order of the elements in <code>*this</code> is unspecified.
 		Iterators and references to elements may be invalidated.</li>
-	<li>Complexity: <code>N log N</code> comparisons, where <code>N ==
-		size()</code>.</li>
-	<li>Throws: Any exceptions thrown by <code>allocator_traits&lt;Allocator&gt;::allocate.</code></li>
+	<li>Complexity: O(N log N) comparisons, where <code>N</code> is <code>size()</code>.</li>
 	<li>Remarks: May allocate.<br>
 		[Note: Not required to be stable ([algorithm.stable]) - end note]</li>
 </ol>
@@ -1846,7 +1839,7 @@ template&lt;class Compare&gt;
 
 <code style="font-weight: bold;">iterator get_iterator(const_pointer p) noexcept;<br>
 const_iterator get_iterator(const_pointer p) const noexcept;</code>
-<ol start="17">
+<ol start="16">
 	<li>Preconditions: <code>p</code> points to an element in
 	<code>*this</code>.</li>
 	<li>Complexity: Linear in the number of active blocks in
