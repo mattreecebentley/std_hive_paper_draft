@@ -1472,10 +1472,10 @@ public:
   void splice(hive&amp; x);
   void splice(hive&amp;&amp; x);
   template&lt;BinaryPredicate = equal_to&lt;T&gt;&gt;
-    size_type unique(BinaryPredicate binary_pred = BinaryPredicate());</code></pre>
+    size_type unique(BinaryPredicate binary_pred = BinaryPredicate());
 
   template&lt;Compare = less&lt;T&gt;&gt;
-    void sort(Compare comp = Compare());</code></pre>
+    void sort(Compare comp = Compare());
 
   iterator get_iterator(const_pointer p) noexcept;
   const_iterator get_iterator(const_pointer p) const noexcept;
