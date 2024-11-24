@@ -193,7 +193,7 @@
 <body>
 Audience: LEWG, SG14, WG21<br>
 Document number: D0447R27<br>
-Date: 2024-11-21<br>
+Date: 2024-11-24<br>
 Project: Introduction of std::hive to the standard library<br>
 Reply-to: Matthew Bentley &lt;mattreecebentley@gmail.com&gt;<br>
 
@@ -235,7 +235,10 @@ LWG meeting 19-11-24 changes: added hint'ed insert overloads. Remove "If an exce
 
 LWG meeting 20-11-24 changes: Updates to tech spec overview, removable of 5.5. Added definitions for copy constructors because blanket wording for copy constructors requires operator == on container. Nitpicks. Changes to move assignment, copy assignment, sort, reserve, unique, capacity and shrink_to_fit definitions. Remove sort allocation notes based on info that allocators are not intended for transitory storage in containers.<br><br>
 
-LWG meeting 21-11-24 changes: Added FAQ entry explaining why erasing the back element invalidates the past-the-end iterator. Emplace_hint added and emplace/insert functions redefined because they don't inherit from sequence containers due to lack of <code>position</code> parameter. Corrections to sort, reshape, reserve, trim_capacity, move assign, sort, erase/erase_if, splice, reshape, copy constructor, copy assign. Move constructor definition added.
+LWG meeting 21-11-24 changes: Added FAQ entry explaining why erasing the back element invalidates the past-the-end iterator. Emplace_hint added and emplace/insert functions redefined because they don't inherit from sequence containers due to lack of <code>position</code> parameter. Corrections to sort, reshape, reserve, trim_capacity, move assign, sort, erase/erase_if, splice, reshape, copy constructor, copy assign. Move constructor definition added.<br><br>
+
+LWG meeting 22-11-24 changes: Added FAQ entry explaining under what circumstances insert/emplace can invalidate the past-the-end iterator. Overview 5.5 removed as replicates information already in function definitions. Fixes to reserve, insert_range, emplace, insert(x), insert_hint(x), insert(n, x), insert(start, end), move constructor, move assignment, copy constructor, sort, trim_capacity, splice.
+
 </li>
 	<li>R26: Tech spec changes: kona final meeting changes applied: is_active()
 		removed. Precondition added to get_iterator, Effects 'return value of end()
@@ -1344,8 +1347,7 @@ during iteration, as opposed to relocating subsequent elements during erasure.</
 		<p style="text-indent: -25pt;">(5.4) &mdash; If user-specified limits are
 		not within hard limits, or if the specified minimum limit is greater than
 		the specified maximum limit, behavior is undefined.</p>
-		<p style="text-indent: -25pt;">(5.5) &mdash; Limits are not copied between hives during move assignment when the allocators are not equal, nor during copy assignment. They are copied during move assignment when the allocators are equal, as well as during copy construction, move construction and <code>swap</code>.</p>
-		<p style="text-indent: -25pt;">(5.6) &mdash; An element block is said to be
+		<p style="text-indent: -25pt;">(5.5) &mdash; An element block is said to be
 		<i>within the bounds of</i> a pair of minimum/maximum limits when its
 		capacity is greater-or-equal-to the minimum limit and less-than-or-equal-to the maximum limit.</p>
  </li>
@@ -1402,8 +1404,8 @@ public:
     hive(from_range_t, R&amp;&amp; rg, hive_limits block_limits, const Allocator&amp; = Allocator());
   hive(const hive&amp; x);
   hive(hive&amp;&amp;) noexcept;
-  hive(const hive&amp; x, const type_identity_t&lt;Allocator&gt;&amp;);
-  hive(hive&amp;&amp;, const type_identity_t&lt;Allocator&gt;&amp;);
+  hive(const hive&amp; x, const type_identity_t&lt;Allocator&gt;&amp; Alloc);
+  hive(hive&amp;&amp;, const type_identity_t&lt;Allocator&gt;&amp; Alloc);
   hive(initializer_list&lt;T&gt; il, const Allocator&amp; = Allocator());
   hive(initializer_list&lt;T&gt; il, hive_limits block_limits, const Allocator&amp; = Allocator());
 
@@ -1577,22 +1579,22 @@ template&lt;<i>container-compatible-range</i>&lt;T&gt; R&gt;
 
 <code style="font-weight:bold">
   hive(const hive&amp; x);<br>
-  hive(const hive&amp; x, const type_identity_t&lt;Allocator&gt;&amp;);</code>
+  hive(const hive&amp; x, const type_identity_t&lt;Allocator&gt;&amp; Alloc);</code>
 <ol start="15">
 	<li><i>Preconditions:</i> <code>T</code> is <i>Cpp17CopyInsertable</i> into <code>hive</code>.</li>
-	<li><i>Effects:</i> Constructs a <code>hive</code> object with the elements of <code>x</code>. If the second overload is called, uses <code>Allocator</code>. Initializes <code>current-limits</code> with <code>x.current-limits</code>.</li>
+	<li><i>Effects:</i> Constructs a <code>hive</code> object with the elements of <code>x</code>. If the second overload is called, uses <code>Alloc</code>. Initializes <code>current-limits</code> with <code>x.current-limits</code>.</li>
 	<li><i>Complexity:</i> Linear in <code>x.size()</code>.</li>
 </ol>
 
 
 <code style="font-weight:bold">
-  hive(const hive&amp;&amp; x);<br>
-  hive(const hive&amp;&amp; x, const type_identity_t&lt;Allocator&gt;&amp;);</code>
+  hive(hive&amp;&amp; x);<br>
+  hive(hive&amp;&amp; x, const type_identity_t&lt;Allocator&gt;&amp; Alloc);</code>
 <ol start="18">
-	<li>Preconditions: When <code>(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || allocator_traits&lt;Allocator&gt;::is_always_equal::value)</code> is <code>false</code>, <code>T</code> meets the <code>Cpp17MoveConstructable</code> requirements.</li>
-	<li><i>Effects:</i> When the first overload is called, or the second overload is called and <code>Allocator == x.get_allocator()</code> is <code>true</code>, <code>current-limits</code> is set to <code>x.current-limits</code> and all element blocks are moved from <code>x</code> into <code>*this</code>. Pointers and references to the elements of <code>x</code> now refer to those same elements but as members of <code>*this</code>. Iterators referring to the elements of <code>x</code> will continue to refer to their elements, but they now behave as iterators into <code>*this</code>, not into <code>x</code>.<br>
-	If the second overload is called and <code>Allocator == x.get_allocator()</code> is <code>false</code>, all elements in <code>x</code> are moved into <code>*this</code> and all element blocks in <code>x</code> are destroyed. References, pointers and iterators referring to the elements of <code>x</code> are invalidated.</li>
-	<li><i>Complexity:</i> Linear in <code>size()</code>. If the second overload is called and <code>Allocator != x.get_allocator()</code>, also linear in <code>x.size()</code>.</li>
+	<li><i>Preconditions:</i> When <code>(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || allocator_traits&lt;Allocator&gt;::is_always_equal::value)</code> is <code>false</code>, <code>T</code> meets the <code>Cpp17MoveInsertable</code> requirements.</li>
+	<li><i>Effects:</i> When the first overload is called, or the second overload is called and <code>(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || Alloc == x.get_allocator())</code> is <code>true</code>, <code>current-limits</code> is set to <code>x.current-limits</code> and all element blocks are moved from <code>x</code> into <code>*this</code>. Pointers and references to the elements of <code>x</code> now refer to those same elements but as members of <code>*this</code>. Iterators referring to the elements of <code>x</code> will continue to refer to their elements, but they now behave as iterators into <code>*this</code>.<br>
+	If the second overload is called and <code>(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || Alloc == x.get_allocator())</code> is <code>false</code>, all elements in <code>x</code> are moved into <code>*this</code> and all element blocks in <code>x</code> are destroyed. References, pointers and iterators referring to the elements of <code>x</code> are invalidated.</li>
+	<li><i>Complexity:</i> If the second overload is called and <code>(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || Alloc == x.get_allocator())</code> is <code>false</code>, linear in <code>x.size()</code>. Otherwise constant.</li>
 </ol>
 
 
@@ -1600,9 +1602,8 @@ template&lt;<i>container-compatible-range</i>&lt;T&gt; R&gt;
 	hive(initializer_list&lt;T&gt; il, const Allocator&amp; = Allocator());<br>
 	hive(initializer_list&lt;T&gt; il, hive_limits block_limits, const Allocator&amp; = Allocator());</code>
 <ol start="21">
-	<li><i>Preconditions:</i> <code>T</code> is <i>Cpp17CopyInsertable</i> into
-		<code>*this</code>.</li>
-	<li><i>Effects:</i> Constructs a <code>hive</code> object with the elements of <code>il</code>, using <code>Allocator</code>. If the second overload is called, also initializes <code>current-limits</code> with <code>block_limits</code>.</li>
+	<li><i>Preconditions:</i> <code>T</code> is <i>Cpp17CopyInsertable</i> into hive.</li>
+	<li><i>Effects:</i> Constructs a <code>hive</code> object with the elements of <code>il</code>, using the specified allocator. If the second overload is called, also initializes <code>current-limits</code> with <code>block_limits</code>.</li>
 	<li><i>Complexity:</i> Linear in <code>il.size()</code>.</li>
 </ol>
 
@@ -1623,9 +1624,9 @@ template&lt;<i>container-compatible-range</i>&lt;T&gt; R&gt;
 <ol start="27">
 	<li><i>Preconditions:</i> When <code>(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || allocator_traits&lt;Allocator&gt;::is_always_equal::value)</code> is <code>false</code>, <code>T</code> is <i>Cpp17MoveInsertable</i> into <code>hive</code> and <i>Cpp17MoveAssignable</i>.</li>
 	<li><i>Effects:</i> All elements in <code>*this</code> are either move-assigned to, or destroyed.<br>
-	When <code>this->get_allocator() == x.get_allocator()</code> is <code>true</code>, <code>current-limits</code> is set to <code>x.current-limits</code> and all element blocks are moved from <code>x</code> into <code>*this</code>. Pointers and references to the elements of <code>x</code> now refer to those same elements but as members of <code>*this</code>. Iterators referring to the elements of <code>x</code> will continue to refer to their elements, but they now behave as iterators into <code>*this</code>, not into <code>x</code>.<br>
-	When <code>this->get_allocator() == x.get_allocator()</code> is <code>false</code>, all elements in <code>x</code> are moved into <code>*this</code> and all element blocks in <code>x</code> are destroyed. References, pointers and iterators referring to the elements of <code>x</code>, as well as the past-the-end iterator of <code>x</code>, are invalidated.</li>
-	<li><i>Complexity:</i> Linear in <code>size()</code>. If <code>this->get_allocator() != x.get_allocator()</code>, also linear in <code>x.size()</code>.</li>
+	When <code>(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || get_allocator() == x.get_allocator())</code> is <code>true</code>, <code>current-limits</code> is set to <code>x.current-limits</code> and all element blocks are moved from <code>x</code> into <code>*this</code>. Pointers and references to the elements of <code>x</code> now refer to those same elements but as members of <code>*this</code>. Iterators referring to the elements of <code>x</code> will continue to refer to their elements, but they now behave as iterators into <code>*this</code>, not into <code>x</code>.<br>
+	When <code>(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || get_allocator() == x.get_allocator())</code> is <code>false</code>, all elements in <code>x</code> are moved into <code>*this</code> and all element blocks in <code>x</code> are destroyed. References, pointers and iterators referring to the elements of <code>x</code>, as well as the past-the-end iterator of <code>x</code>, are invalidated.</li>
+	<li><i>Complexity:</i> Linear in <code>size()</code>. If <code>(allocator_traits&lt;Allocator&gt;::propagate_on_container_move_assignment::value || get_allocator() == x.get_allocator())</code>, also linear in <code>x.size()</code>.</li>
 </ol>
 
 
@@ -1634,21 +1635,20 @@ template&lt;<i>container-compatible-range</i>&lt;T&gt; R&gt;
 
 <code style="font-weight: bold;">size_type capacity() const noexcept;</code>
 <ol>
-	<li><i>Returns:</i> The total number of elements that <code>*this</code> can hold
-		without requiring allocation of more element blocks.</li>
+	<li><i>Returns:</i> The total number of elements that <code>*this</code> can hold without requiring allocation of more element blocks.</li>
 	<li><i>Complexity:</i> Constant.</li>
 </ol>
 
 
 <code style="font-weight: bold;">void reserve(size_type n);</code>
 <ol start="3">
-	<li><i>Effects:</i> All references, pointers, and iterators referring to elements in the sequence, as well as the past-the-end iterator,
-		remain valid. If <code>n &lt;= capacity()</code> there are no effects.</li>
+	<li><i>Effects:</i> If <code>n &lt;= capacity()</code> is <code>true</code> there are no effects. Otherwise increases <code>capacity()</code> by allocating reserved blocks.</li>
 	<li><i>Postconditions:</i> <code>capacity() &gt;= n</code> is <code>true</code>.</li>
 	<li><i>Complexity:</i> It does not change the size of the sequence and takes at most
 		linear time in the number of reserved blocks allocated.</li>
 	<li><i>Throws:</i> <code>length_error</code> if <code>n &gt; max_size()</code>, as well as any exceptions thrown by the allocator.</li>
-	<li><i>Remarks:</i> Informs a <code>hive</code> of a planned change in size, so that it can manage the storage allocation accordingly.</li>
+	<li><i>Remarks:</i> All references, pointers, and iterators referring to elements in the sequence, as well as the past-the-end iterator,
+		remain valid.</li>
 </ol>
 
 
@@ -1674,24 +1674,25 @@ template&lt;<i>container-compatible-range</i>&lt;T&gt; R&gt;
 <code style="font-weight: bold;">void trim_capacity() noexcept;<br>
 void trim_capacity(size_type n) noexcept; </code>
 <ol start="12">
-	<li><i>Effects:</i> All references, pointers, and iterators referring to elements in the sequence, as well as the past-the-end iterator,
-		remain valid. For the first overload, all reserved blocks are deallocated, and
+	<li><i>Effects:</i> For the first overload, all reserved blocks are deallocated, and
 		<code>capacity()</code> is reduced accordingly. For the second overload,
 		<code>capacity()</code> will be reduced to no less than <code>n</code>.
  </li>
 	<li><i>Complexity:</i> Linear in the number of reserved blocks deallocated.</li>
+	<li><i>Remarks:</i> All references, pointers, and iterators referring to elements in the sequence, as well as the past-the-end iterator,
+		remain valid.</li>
 </ol>
 
 
 <code style="font-weight: bold;">constexpr hive_limits block_capacity_limits() const noexcept;</code>
-<ol start="14">
+<ol start="15">
 	<li><i>Returns:</i> <code>current-limits</code>.</li>
 	<li><i>Complexity:</i> Constant.</li>
 </ol>
 
 
 <code style="font-weight: bold;">static constexpr hive_limits block_capacity_default_limits() noexcept;</code>
-<ol start="16">
+<ol start="17">
 	<li><i>Returns:</i> A <code>hive_limits</code> struct with the <code>min</code> and
 		<code>max</code> members set to the implementation's default limits.</li>
 	<li><i>Complexity:</i> Constant.</li>
@@ -1699,7 +1700,7 @@ void trim_capacity(size_type n) noexcept; </code>
 
 
 <code style="font-weight: bold;">static constexpr hive_limits block_capacity_hard_limits() noexcept;</code>
-<ol start="18">
+<ol start="19">
 	<li><i>Returns:</i> A <code>hive_limits</code> struct with the <code>min</code> and
 		<code>max</code> members set to the implementation's hard limits.</li>
 	<li><i>Complexity:</i> Constant.</li>
@@ -1707,17 +1708,15 @@ void trim_capacity(size_type n) noexcept; </code>
 
 
 <code style="font-weight: bold;">void reshape(hive_limits block_limits);</code>
-<ol start="20">
+<ol start="21">
 	<li><i>Preconditions:</i> <code>T</code> is <i>Cpp17MoveInsertable</i> into <code>hive</code>.
  </li>
 	<li><i>Effects:</i> For any active blocks not within the bounds of <code>block_limits</code>, the elements within those active blocks are reallocated to new or existing element blocks which are within the bounds. Any element blocks not within the bounds of <code>block_limits</code> are deallocated.
-		If an exception is thrown during allocation of a new element block, 
+		If an exception is thrown during allocation of a new element block,
 		<code>capacity()</code> may be reduced, reallocation may occur and <code>current-limits</code> may be assigned a value other than
 		<code>block_limits</code>. Otherwise <code>block_limits</code> is assigned to <code>current-limits</code>. If any other exception is thrown the effects are unspecified.</li>
 <li><i>Postconditions:</i> <code>size()</code> is unchanged.</li>
-	<li><i>Complexity:</i> Linear in the number of element blocks in <code>*this</code>.
-		If reallocation occurs, also linear in the number of elements
-	reallocated.</li>
+	<li><i>Complexity:</i> Linear in the number of element blocks in <code>*this</code>. If reallocation occurs, also linear in the number of elements reallocated.</li>
 	<li><i>Remarks:</i> This operation may change <code>capacity()</code>. If
 		reallocation occurs, the order of the elements in <code>*this</code> may
 		change. Reallocation invalidates all references, pointers, and
@@ -1735,10 +1734,9 @@ void trim_capacity(size_type n) noexcept; </code>
 template&lt;class... Args&gt; iterator emplace(Args&amp;&amp;... args);
 template&lt;class... Args&gt; iterator emplace_hint(const_iterator hint, Args&amp;&amp;... args);</code></pre>
 <ol>
-<li><i>Preconditions:</i> <code>T</code> is <i>Cpp17EmplaceConstructible</i> into <code>hive</code> from <code>args</code>. <code>T</code> is also
-<i>Cpp17MoveInsertable</i> into <code>hive</code> and <i>Cpp17MoveAssignable</i>.</li>
+<li><i>Preconditions:</i> <code>T</code> is <i>Cpp17EmplaceConstructible</i> into <code>hive</code> from <code>args</code>.</li>
 <li><i>Effects:</i> Inserts an object of type <code>T</code> constructed with <code>std::forward&lt;Args&gt;(args)...</code>.<br>
-For the second form, the <code>hint</code> parameter is ignored.<br>
+The <code>hint</code> parameter is ignored. If an exception is thrown, there are no effects.<br>
 [Note 1: <code>args</code> can directly or indirectly refer to a value in <code>*this</code>. - end note]</li>
 <li><i>Returns:</i> An iterator that points to the new element constructed from <code>args</code> into <code>*this</code>.</li>
 <li><i>Complexity:</i> Constant. The constructor of <code>T</code> is called exactly once.</li>
@@ -1748,17 +1746,11 @@ For the second form, the <code>hint</code> parameter is ignored.<br>
 
 <code style="font-weight:bold">
 iterator insert(const T&amp; x);<br>
-iterator insert(T&amp;&amp; x);</code>
-<ol start="6">
-<li><i>Effects:</i> Equivalent to: <code>return emplace(std::forward&lt;T&gt;(x))</code>.</li> 
-</ol>
-
-
-<code style="font-weight:bold">
 iterator insert(const_iterator hint, const T&amp; x);<br>
+iterator insert(T&amp;&amp; x);<br>
 iterator insert(const_iterator hint, T&amp;&amp; x);</code>
-<ol start="7">
-<li><i>Effects:</i> Equivalent to: <code>return emplace_hint(hint, std::forward&lt;T&gt;(x))</code>.</li>
+<ol start="6">
+<li><i>Effects:</i> Equivalent to: <code>return emplace(std::forward&lt;decltype(x)&gt;(x))</code>. The <code>hint</code> parameter is ignored.</li>
 </ol>
 
 
@@ -1766,33 +1758,36 @@ iterator insert(const_iterator hint, T&amp;&amp; x);</code>
 void insert(initializer_list&lt;T&gt; rg);
 template&lt;<i>container-compatible-range</i> &lt;T&gt; R&gt;
   void insert_range(R&amp;&amp; rg);</code></pre>
-<ol start="8">
-<li><i>Preconditions:</i> <code>T</code> is <i>Cpp17EmplaceConstructible</i> into <code>hive</code> from <code>*ranges::begin(rg)</code>. <code>T</code> is also <i>Cpp17MoveInsertable</i> into <code>hive</code>, and <code>T</code> meets the <i>Cpp17MoveConstructible</i>, <i>Cpp17MoveAssignable</i>, and <i>Cpp17Swappable</i> ([swappable.requirements]) requirements. <code>rg</code> and <code>*this</code> do not overlap.</li>
+<ol start="7">
+<li><i>Preconditions:</i> <code>T</code> is <i>Cpp17CopyConstructible</i> into <code>hive</code> from <code>*ranges::begin(rg)</code>. <code>rg</code> and <code>*this</code> do not overlap.</li>
 <li><i>Effects:</i> Inserts copies of elements in <code>rg</code>. Each iterator in the range <code>rg</code> is dereferenced exactly once.</li>
-	<li><i>Complexity:</i> Linear in the number of elements inserted. The constructor of <code>T</code> is called exactly once for each element inserted.</li>
-	<li><i>Remarks:</i> If an element is inserted, invalidates the past-the-end iterator.</li>
+<li><i>Complexity:</i> Linear in the number of elements inserted. The constructor of <code>T</code> is called exactly once for each element inserted.</li>
+<li><i>Remarks:</i> If an element is inserted, invalidates the past-the-end iterator.</li>
 </ol>
 
 
 <code style="font-weight:bold">
 void insert(size_type n, const T&amp; x);</code>
-<ol start="12">
-	<li><i>Effects:</i> Equivalent to: <code>insert_range(views::repeat(n, std::ref(x)))</code>.</li>
+<ol start="11">
+<li><i>Preconditions:</i> <code>T</code> is <i>Cpp17CopyConstructible</i> into <code>hive</code>.</li>
+<li><i>Effects:</i> Inserts <code>n</code> copies of <code>x</code>.</li>
+<li><i>Complexity:</i> Linear in <code>n</code>. The constructor of <code>T</code> is called exactly once for each element inserted.</li>
+<li><i>Remarks:</i> If an element is inserted, invalidates the past-the-end iterator.</li>
 </ol>
 
 
 <pre><code style="font-weight:bold">
 template&lt;class InputIterator&gt;
   void insert(InputIterator first, InputIterator last);</code></pre>
-<ol start="13">
-	<li><i>Effects:</i> Equivalent to: <code>insert_range(subrange(first, last))</code>.</li>
+<ol start="15">
+	<li><i>Effects:</i> Equivalent to: <code>insert_range(ranges::subrange(first, last))</code>.</li>
 </ol>
 
 
 <code style="font-weight: bold;">iterator erase(const_iterator
 position);<br>
 iterator erase(const_iterator first, const_iterator last);</code>
-<ol start="14">
+<ol start="16">
 	<li><i>Effects:</i> Invalidates iterators and references to the erased element. An
 		erase operation that erases the last element of <code>*this</code> also
 		invalidates the past-the-end iterator.</li>
@@ -1806,7 +1801,7 @@ iterator erase(const_iterator first, const_iterator last);</code>
 noexcept(allocator_traits&lt;Allocator&gt;::propagate_on_container_swap::value
 || allocator_traits&lt;Allocator&gt;::is_always_equal::value);<br>
 </code>
-<ol start="16">
+<ol start="18">
 	<li><i>Effects:</i> Exchanges the contents, <code>capacity()</code> and <code>current-limits</code> of
 		<code>*this</code> with that of <code>x</code>.</li>
 	<li><i>Complexity:</i> Constant.</li>
@@ -1825,11 +1820,12 @@ noexcept(allocator_traits&lt;Allocator&gt;::propagate_on_container_swap::value
 		the definitions and requirements in [alg.sorting] apply.</li>
 </ol>
 
+
 <code style="font-weight: bold;">void splice(hive&amp; x);<br>
 void splice(hive&amp;&amp; x);</code>
 <ol start="2">
-	<li><i>Preconditions:</i> <code>addressof(x) != this</code> is <code>true</code>. <code>get_allocator() == x.get_allocator()</code> is <code>true</code>.</li>
-	<li><i>Effects:</i> <strike>If <code>addressof(x) == this</code> is <code>true</code> there are no effects.</strike>
+	<li><i>Preconditions:</i><code>get_allocator() == x.get_allocator()</code> is <code>true</code>.</li>
+	<li><i>Effects:</i> If <code>addressof(x) == this</code> is <code>true</code> the behavior is erroneous and there are no effects.
 		Inserts the contents of <code>x</code> into <code>*this</code>
 		and <code>x</code> becomes empty. Pointers and references to the moved
 		elements of <code>x</code> now refer to those same elements but as members
@@ -1842,7 +1838,7 @@ void splice(hive&amp;&amp; x);</code>
 		blocks are not within the bounds of
 		<code>this-&gt;current-limits</code>.</li>
 	<li><i>Remarks:</i> Reserved blocks in <code>x</code> are not transferred into
-		<code>*this</code>. <strike>If <code>addressof(x) != this</code> is <code>true</code>, </strike>Invalidates the past-the-end iterator for both
+		<code>*this</code>. If <code>addressof(x) == this</code> is <code>false</code>, invalidates the past-the-end iterator for both
 		<code>x</code> and <code>*this</code>.</li>
 </ol>
 
@@ -1867,8 +1863,8 @@ template&lt;class BinaryPredicate = equal_to&lt;T&gt;&gt;
 
 
 <pre><code style="font-weight:bold">
-template&lt;Compare = less&lt;T&gt;&gt;
-  void sort(class Compare comp = Compare());</code></pre>
+template&lt;class Compare = less&lt;T&gt;&gt;
+  void sort(Compare comp = Compare());</code></pre>
 <ol start="12">
 	<li><i>Preconditions:</i> <code>T</code> is <i>Cpp17MoveInsertable</i> into <code>hive</code>, <i>Cpp17MoveAssignable</i>, and <i>Cpp17Swappable</i>.</li>
 	<li><i>Effects:</i> Sorts <code>*this</code> according to the <code>comp</code> function object. If an exception is
@@ -2818,11 +2814,18 @@ between hive and colony as of the time of writing follow:</p>
 		h.reshape(10, 50);</code></p>
  </li>
 	<li><h4>Why does erasing the back element necessarily invalidate the past-the-end iterator (ie. end())?</h4>
-	<p>For an iterator to reach end() it must be one ++ iteration past the back element. You could implement this in some complicated way, but it's best not to slow down the ++ operator so just having the end() location be one element (or one skipblock) past the back element is in my view the best approach.
-Whether an implementation allows there to be erased elements (ie. a skipblock) between the back element and end() is up to the implementation. I allow it because in performance testing this was found to perform better overall than checking whether we've erased the back element and moving end() backwards to behind the new back element. If the back block is full, end() is one past the end of the block (there is allowance for this in the standard, otherwise vector would not work).</p>
-<p>Regardless of the style of implementation, the following scenario applies: the back block has one element left, and a call to erase() erases that element. As per the hive overview since the block is now empty it must either be changed to a reserved block or deallocated. Either way it ceases to be a part of the iterable sequence, so the current location of end() cannot be reached by a ++ iteration from the new back element. At this point we must change the location of end() to be one ++ iteration away from the new back element, regardless of whether this is within the new back block, or one-past-the-end of that block (if skipblocks are allowed after the back block, end() will always be one-past-the-end of the block at this juncture).</p>
-<p>You can see now that any erasure which erases the back element has the <i>potential</i> to change the location of end(), even if it doesn't necessarily do so.</p>
+	<p>For an iterator to reach end() it must be one ++ iteration past the back element. You could implement this in some complicated way, but it's best not to slow down the ++ operator so just having the end() location be one element (or one skipblock) past the back element is in my view the best approach. If the back block is full, end() is one element past the end of the block (there is allowance for this in the standard, otherwise vector would not work).</p>
+<p>Whether an implementation allows there to be erased elements (ie. a skipblock) between the back element and end() is up to the implementation. I allow it because in performance testing this was found to perform better overall than checking whether we've erased the back element and moving end() backwards to behind the new back element. If an implementation chooses not to allow it, then erasing from the back of the container invalidates previous end() values. </p>
+<p>But regardless of the style of implementation, the following scenario will invalidate end(): the back block has one element left, and a call to erase() erases that element. As per the hive overview, since the block is now empty it must either be changed to a reserved block or deallocated. Either way it ceases to be a part of the iterable sequence, so the current location of end() cannot be reached by a ++ iteration from the new back element. At this point we must change the location of end() to be one ++ iteration away from the new back element, regardless of whether this is within the new back block, or one-past-the-end of that block (if skipblocks are allowed between the back element and end(), end() will always be one element past the end of the block at this juncture).</p>
+<p>You can see from the above that any erasure which erases the back element has the <i>potential</i> to change the location of end(), even if it doesn't necessarily do so.</p>
 </li>
+<li><h4>Under what circumstances does insert/emplace invalidate the past-the-end iterator?</h4>
+<p>Obviously if there are no erased element memory locations to insert into, a hive will have to insert to the back of the container, invalidating the end iterator. However even when this is not the case, it is possible for an implementation to invalidate end(). Consider the following scenario: A hive instance is not full to capacity, the back block is not full (end() is not one-element-past-the-end of the back block), and the only block which has erased-element memory locations to insert into is the first block, which is very small (say, 8 elements). The back block is much larger, and the first block only has one element left in it.
+Is it better to insert to the first block, knowing that it's small size affords low cache locality, or to insert at the back, knowing that this increases the probability that the first, small block will be deallocated (once the final element is erased), increasing overall cache locality and iteration speed?</p>
+<p>I would personally opt to just insert to the first block, because assessing the situation requires additional branching and is likely to slow down insertion in general. However, it is a valid (if possibly slower) strategy to not insert into the first block and insert to the back block instead in this case. Or as an alternative, to not insert to any block with only one element left and instead insert to the back block, if it isn't full. The latter two strategies invalidate the past-the-end iterator even if there are erased element memory locations available to insert into.</p>
+<p>Hence we need to allow for the idea that any insertion could potentially invalidate the end iterator, and leave the exact circumstances under which this happens as an implementation detail.</p>
+</li>
+
 </ol>
 
 <h3><a id="sg14gameengine"></a>Appendix D - Typical game engine
