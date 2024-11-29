@@ -192,7 +192,7 @@
 
 <body>
 Audience: LEWG, SG14, WG21<br>
-Document number: D0447R27<br>
+Document number: P0447R27<br>
 Date: 2024-11-27<br>
 Project: Introduction of std::hive to the standard library<br>
 Reply-to: Matthew Bentley &lt;mattreecebentley@gmail.com&gt;<br>
@@ -229,7 +229,7 @@ Reply-to: Matthew Bentley &lt;mattreecebentley@gmail.com&gt;<br>
 
 <h2><a id="revisions"></a>Revision history</h2>
 <ul>
-<li>R27: Correction/optimisation to bitset+skipfield approach to element skipping. Updated tab:containers.summary and sequence.reqmts to match current draft C++ standard. Added [diff] and [library] sections to tech spec. Other nitpicks from first LWG meeting processed. Correction to possessive usage of 'its'. Placeholder numbers in tech spec removed. "may be the back of the container when no erasures have occurred, or " removed in synopsis. Added move assignment definition as it conditionally transfers current-limits from source to destination so is not covered by blanket wording, and copy assignment definition as it does not transfer current-limits. Added comment sections to synopsis. Added note to overview re: hard limits being constrained by allocator_traits&lt;Alloc&gt;::max_size(). Update to appendix info for supporting small types, given that I found a better/cheaper alternative. Changed all references to 'bitfield' to 'bitset' to avoid ambiguity in the context of C++. Removed references to non-literal types being a problem for constexpr in the FAQ, since Ville's paper P2242 removes that hurdle. Further editing to hive.overview.3. Update Appendix B. Added a FAQ entry on why we don't support why a fully-functional insert(iterator position, T value).<br><br>
+<li>R27: Correction/optimization to bitset+skipfield approach to element skipping. Updated tab:containers.summary and sequence.reqmts to match current draft C++ standard. Added [diff] and [library] sections to tech spec. Other nitpicks from first LWG meeting processed. Correction to possessive usage of 'its'. Placeholder numbers in tech spec removed. "may be the back of the container when no erasures have occurred, or " removed in synopsis. Added move assignment definition as it conditionally transfers current-limits from source to destination so is not covered by blanket wording, and copy assignment definition as it does not transfer current-limits. Added comment sections to synopsis. Added note to overview re: hard limits being constrained by allocator_traits&lt;Alloc&gt;::max_size(). Update to appendix info for supporting small types, given that I found a better/cheaper alternative. Changed all references to 'bitfield' to 'bitset' to avoid ambiguity in the context of C++. Removed references to non-literal types being a problem for constexpr in the FAQ, since Ville's paper P2242 removes that hurdle. Further editing to hive.overview.3. Update Appendix B. Added a FAQ entry on why we don't support why a fully-functional insert(iterator position, T value).<br><br>
 
 LWG meeting 19-11-24 changes: added hint'ed insert overloads. Remove "If an exception is thrown other than by the move constructor of a non-Cpp17CopyInsertable T, both x and *this are left in a usable state." from move assignment. Remove throws paragraphs in move assignment, shrink_to_fit and reshape. Move reshape, block_capacity_hard_limits and block_capacity_default_limits to [hive.capacity]. Modification to exception info for shrink_to_fit based on removing support for copy-if-non-noexcept-move. Rebase reserve and sort 'Throws' wording around the more recent basic_string wording.<br><br>
 
@@ -237,7 +237,7 @@ LWG meeting 20-11-24 changes: Updates to tech spec overview, removable of 5.5. A
 
 LWG meeting 21-11-24 changes: Added FAQ entry explaining why erasing the back element invalidates the past-the-end iterator. Emplace_hint added and emplace/insert functions redefined because they don't inherit from sequence containers due to lack of <code>position</code> parameter. Corrections to sort, reshape, reserve, trim_capacity, move assign, sort, erase/erase_if, splice, reshape, copy constructor, copy assign. Move constructor definition added.<br><br>
 
-LWG meeting 22-11-24 changes: Added FAQ entry explaining under what circumstances insert/emplace can invalidate the past-the-end iterator. Overview 5.5 removed as replicates information already in function definitions. Fixes to reserve, insert_range, emplace/emplace-hint, insert(x), insert_hint(x), insert(n, x), insert(start, end), insert_range, insert(il), move constructor, move assignment, copy constructor, initializer-list constructor, sort, trim_capacity, splice, unique, erase.
+LWG meeting 22-11-24 changes: Added FAQ entries explaining under what circumstances insert/emplace/sortcan invalidate the past-the-end iterator. Overview 5.5 removed as replicates information already in function definitions. Fixes to reserve, insert_range, emplace/emplace-hint, insert(x), insert_hint(x), insert(n, x), insert(start, end), insert_range, insert(il), move constructor, move assignment, copy constructor, initializer-list constructor, sort, trim_capacity, splice, unique, erase.
 
 </li>
 	<li>R26: Tech spec changes: kona final meeting changes applied: is_active()
@@ -1058,7 +1058,8 @@ The latter approach is why the order of elements post-reshape is not guaranteed 
 		form <a href="https://github.com/mattreecebentley/plf_indiesort">here</a> -
 		see that page for the technique's advantages over the usual sort algorithms
 		for non-random-access containers. An allowance is made for sort to allocate
-		memory if necessary, so that algorithms such as this can be used. Since memory allocation is unspecified but allowed for std::list::sort/std::forward_list::sort, this is not necessary, just courtesy.</p>
+		memory if necessary, so that algorithms such as this can be used. Erased element memory space and reserved blocks can also be used as temporary sorting memoery instead of, or as well as, allocating.
+		Since memory allocation is unspecified but allowed for std::list::sort/std::forward_list::sort, this is not necessary, just courtesy.</p>
  </li>
 	<li><code style="font-weight: bold;">void unique();<br>
 		template &lt;class BinaryPredicate&gt;<br>
@@ -1647,8 +1648,7 @@ template&lt;<i>container-compatible-range</i>&lt;T&gt; R&gt;
 	<li><i>Complexity:</i> It does not change the size of the sequence and takes at most
 		linear time in the number of reserved blocks allocated.</li>
 	<li><i>Throws:</i> <code>length_error</code> if <code>n &gt; max_size()</code>, as well as any exceptions thrown by the allocator.</li>
-	<li><i>Remarks:</i> All references, pointers, and iterators referring to elements in the sequence, as well as the past-the-end iterator,
-		remain valid.</li>
+	<li><i>Remarks:</i> All references, pointers, and iterators referring to elements in the sequence, as well as the past-the-end iterator, remain valid.</li>
 </ol>
 
 
@@ -1865,19 +1865,19 @@ template&lt;class BinaryPredicate = equal_to&lt;T&gt;&gt;
 <pre><code style="font-weight:bold">
 template&lt;class Compare = less&lt;T&gt;&gt;
   void sort(Compare comp = Compare());</code></pre>
-<ol start="12">
+<ol start="13">
 	<li><i>Preconditions:</i> <code>T</code> is <i>Cpp17MoveInsertable</i> into <code>hive</code>, <i>Cpp17MoveAssignable</i>, and <i>Cpp17Swappable</i>.</li>
 	<li><i>Effects:</i> Sorts <code>*this</code> according to the <code>comp</code> function object. If an exception is
 		thrown, the order of the elements in <code>*this</code> is unspecified.</li>
 	<li><i>Complexity:</i> O(<i>N</i> log <i>N</i>) comparisons, where <i>N</i> is <code>size()</code>.</li>
-	<li><i>Remarks:</i> May allocate. References, pointers and iterators referring to elements in <code>*this</code> may be invalidated.<br>
+	<li><i>Remarks:</i> May allocate. References, pointers and iterators referring to elements in the sequence, as well as the past-the-end iterator, may be invalidated.<br>
 		[Note: Not required to be stable ([algorithm.stable]) - end note]</li>
 </ol>
 
 
 <code style="font-weight: bold;">iterator get_iterator(const_pointer p) noexcept;<br>
 const_iterator get_iterator(const_pointer p) const noexcept;</code>
-<ol start="16">
+<ol start="17">
 	<li><i>Preconditions:</i> <code>p</code> points to an element in
 	<code>*this</code>.</li>
 	<li><i>Complexity:</i> Linear in the number of active blocks in
@@ -2824,6 +2824,10 @@ Is it better to insert to the first block, knowing that its small size affords l
 <p>I would personally opt to just insert to the first block, because assessing the situation requires additional branching and is likely to slow down insertion in general. However, it is a valid (if possibly slower) strategy to not insert into the first block and insert to the back block instead in this case. Or as an alternative, to not insert to any block with only one element left and instead insert to the back block, if it isn't full. The latter two strategies invalidate the past-the-end iterator even if there are erased element memory locations available to insert into.</p>
 <p>Hence we need to allow for the idea that any insertion could potentially invalidate the past-the-end iterator, and leave the exact circumstances under which this happens as an implementation detail.</p>
 </li>
+
+<li><h4>Under what circumstances could sort invalidate the past-the-end iterator?</h4>
+<p>A potential optimization here is moving elements into erased-element memory spaces, if they exist after a given non-erased element, while sorting - as opposed to rearranging elements. This would make sense in the instance, for example, where there's only one element out of place, and there happens to be an erased element memory space in between the two elements it's meant to be between. I think it's unlikely that anyone would apply this optimization, as it's highly specific to the state of a hive instance - but it's certainly possible. If they did, and an element at the back of the container were to be moved into erased element memory space in this way, such that it's memory space was not filled with another element and effectively became erased, and it was the only element in the back block, this would trigger deallocation/reserving of the back block, invalidating the end iterator.</p>
+<p>Likewise a sort routine could choose to reallocate elements to unused element memory space at the back of the back block or into reserved blocks (when available), instead of swapping elements around, which would also invalidate the end iterator.</li>
 
 </ol>
 
